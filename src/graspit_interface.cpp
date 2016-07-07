@@ -47,17 +47,17 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
         Robot *r = graspitCore->getWorld()->getRobot(request.id);
         transf t = r->getTran();
 
-        geometry_msgs::Pose robot_pose = geometry_msgs::Pose();
+        geometry_msgs::Pose pose = geometry_msgs::Pose();
 
-        robot_pose.position.x = t.translation().x() / 1000.0;
-        robot_pose.position.y = t.translation().y() / 1000.0;;
-        robot_pose.position.z = t.translation().z() / 1000.0;;
-        robot_pose.orientation.w = t.rotation().w;
-        robot_pose.orientation.x = t.rotation().x;
-        robot_pose.orientation.y = t.rotation().y;
-        robot_pose.orientation.z = t.rotation().z;
+        pose.position.x = t.translation().x() / 1000.0;
+        pose.position.y = t.translation().y() / 1000.0;;
+        pose.position.z = t.translation().z() / 1000.0;;
+        pose.orientation.w = t.rotation().w;
+        pose.orientation.x = t.rotation().x;
+        pose.orientation.y = t.rotation().y;
+        pose.orientation.z = t.rotation().z;
 
-        response.robot.pose = robot_pose;
+        response.robot.pose = pose;
 
         for (int i=0; i < r->getNumJoints(); i++) {
             sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
@@ -80,6 +80,20 @@ bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::R
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
+        GraspableBody *b = graspitCore->getWorld()->getGB(request.id);
+        transf t = b->getTran();
+
+        geometry_msgs::Pose pose = geometry_msgs::Pose();
+
+        pose.position.x = t.translation().x() / 1000.0;
+        pose.position.y = t.translation().y() / 1000.0;;
+        pose.position.z = t.translation().z() / 1000.0;;
+        pose.orientation.w = t.rotation().w;
+        pose.orientation.x = t.rotation().x;
+        pose.orientation.y = t.rotation().y;
+        pose.orientation.z = t.rotation().z;
+
+        response.graspable_body.pose = pose;
         return true;
     }
     return true;
@@ -92,6 +106,21 @@ bool GraspitInterface::getBodyCB(graspit_interface::GetBody::Request &request,
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
+        Body *b = graspitCore->getWorld()->getBody(request.id);
+        transf t = b->getTran();
+
+        geometry_msgs::Pose pose = geometry_msgs::Pose();
+
+        pose.position.x = t.translation().x() / 1000.0;
+        pose.position.y = t.translation().y() / 1000.0;;
+        pose.position.z = t.translation().z() / 1000.0;;
+        pose.orientation.w = t.rotation().w;
+        pose.orientation.x = t.rotation().x;
+        pose.orientation.y = t.rotation().y;
+        pose.orientation.z = t.rotation().z;
+
+        response.body.pose = pose;
+
         return true;
     }
     return true;
