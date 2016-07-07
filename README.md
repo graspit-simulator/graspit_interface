@@ -15,6 +15,11 @@ catkin_init_workspace .
 git clone git@github.com:CURG/graspit_interface.git
 git clone git@github.com:CURG/graspit_commander.git
 git clone git@github.com:graspit-simulator/graspit-ros.git
+```
+Change GraspIt! branch, this will go away, once this branch is pulled into 
+git@github.com:graspit-simulator/graspit.git
+
+```
 cd graspit-ros/graspit
 rm -rf graspit_source
 git clone git@github.com:jvarley/graspit.git graspit_source 
