@@ -2,7 +2,7 @@
 ROS interface for GraspIt!
 
 Setup:
-'''
+```
 cd ~
 mkdir graspit_ros_ws
 cd graspit_ros_ws
@@ -23,12 +23,12 @@ checkout origin/refactor_src
 
 cd ~/graspit_ros_ws
 catkin_make
-'''
+```
 
 Run:
-'''
+```
 source devel/setup.bash
 ipython
 from graspit_commander import GraspitCommander
 GraspitCommander.*
-'''
+```
