@@ -4,10 +4,18 @@ project(graspit_interface)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS message_generation std_msgs geometry_msgs)
+find_package(catkin REQUIRED COMPONENTS
+    message_generation
+    std_msgs
+    geometry_msgs
+    sensor_msgs
+    roscpp
+    graspit
+    actionlib)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(Qt4 COMPONENTS QtCore  REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -66,6 +74,8 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs geometry_msg
  generate_messages(
    DEPENDENCIES
    std_msgs  # Or other packages containing msgs
+   sensor_msgs
+   geometry_msgs
  )
 
 ################################################
@@ -98,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs geometry_msg
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES graspit_interface
   CATKIN_DEPENDS geometry_msgs std_msgs message_runtime
 #  DEPENDS system_lib
@@ -110,7 +120,9 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include
+                    ${catkin_INCLUDE_DIRS}
+                    ${QT_INCLUDES})
 
 ## Declare a C++ library
 # add_library(graspit_interface
@@ -123,16 +135,19 @@ catkin_package(
 # add_dependencies(graspit_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(graspit_interface_node src/graspit_interface_node.cpp)
+add_library(graspit_interface
+    src/graspit_interface.cpp
+    src/main.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(graspit_interface_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(graspit_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(graspit_interface_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(graspit_interface
+  ${catkin_LIBRARIES}
+  ${QT_LIBRARIES}
+)
 
 #############
 ## Install ##

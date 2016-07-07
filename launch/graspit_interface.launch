@@ -1,0 +1,3 @@
+<launch>
+  <node name="graspit_interface" pkg="graspit_interface" type="launch_graspit.sh" output="screen" />
+</launch>
