@@ -40,7 +40,7 @@ int GraspitInterface::mainLoop()
 bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
                                   graspit_interface::GetRobot::Response &response)
 {
-    if (graspitCore->getWorld()->getNumRobots() < request.id) {
+    if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
@@ -76,7 +76,7 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
 bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::Request &request,
                 graspit_interface::GetGraspableBody::Response &response)
 {
-    if (graspitCore->getWorld()->getNumGB() < request.id) {
+    if (graspitCore->getWorld()->getNumGB() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
@@ -102,7 +102,7 @@ bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::R
 bool GraspitInterface::getBodyCB(graspit_interface::GetBody::Request &request,
                 graspit_interface::GetBody::Response &response)
 {
-    if (graspitCore->getWorld()->getNumBodies() < request.id) {
+    if (graspitCore->getWorld()->getNumBodies() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
@@ -159,7 +159,7 @@ bool GraspitInterface::getBodiesCB(graspit_interface::GetBodies::Request &reques
 bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &request,
                 graspit_interface::SetRobotPose::Response &response)
 {
-    if (graspitCore->getWorld()->getNumRobots() < request.id) {
+    if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
@@ -182,7 +182,7 @@ bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &
 bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBodyPose::Request &request,
                 graspit_interface::SetGraspableBodyPose::Response &response)
 {
-    if (graspitCore->getWorld()->getNumGB() < request.id) {
+    if (graspitCore->getWorld()->getNumGB() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
@@ -206,7 +206,7 @@ bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBod
 bool GraspitInterface::setBodyPoseCB(graspit_interface::SetBodyPose::Request &request,
                 graspit_interface::SetBodyPose::Response &response)
 {
-    if (graspitCore->getWorld()->getNumBodies() < request.id) {
+    if (graspitCore->getWorld()->getNumBodies() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
