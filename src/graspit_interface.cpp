@@ -15,16 +15,16 @@ int GraspitInterface::init(int argc, char** argv)
     nh = new ros::NodeHandle("");
 
     getRobot_srv = nh->advertiseService("getRobot", &GraspitInterface::getRobotCB, this);
-    getRobot_srv = nh->advertiseService("getGraspableBody", &GraspitInterface::getGraspableBodyCB, this);
-    getRobot_srv = nh->advertiseService("getBody", &GraspitInterface::getBodyCB, this);
-    getRobot_srv = nh->advertiseService("getRobots", &GraspitInterface::getRobotsCB, this);
-    getRobot_srv = nh->advertiseService("getGraspableBodies", &GraspitInterface::getGraspableBodiesCB, this);
-    getRobot_srv = nh->advertiseService("getBodies", &GraspitInterface::getBodiesCB, this);
-    getRobot_srv = nh->advertiseService("setRobotPose", &GraspitInterface::setRobotPoseCB, this);
-    getRobot_srv = nh->advertiseService("setBodyPose", &GraspitInterface::setBodyPoseCB, this);
-    getRobot_srv = nh->advertiseService("setGraspableBodyPose", &GraspitInterface::setGraspableBodyPoseCB, this);
-    getRobot_srv = nh->advertiseService("getDynamics", &GraspitInterface::getDynamicsCB, this);
-    getRobot_srv = nh->advertiseService("setDynamics", &GraspitInterface::setDynamicsCB, this);
+    getGraspableBody_srv = nh->advertiseService("getGraspableBody", &GraspitInterface::getGraspableBodyCB, this);
+    getBody_srv = nh->advertiseService("getBody", &GraspitInterface::getBodyCB, this);
+    getRobots_srv = nh->advertiseService("getRobots", &GraspitInterface::getRobotsCB, this);
+    getGraspableBodies_srv = nh->advertiseService("getGraspableBodies", &GraspitInterface::getGraspableBodiesCB, this);
+    getBodies_srv = nh->advertiseService("getBodies", &GraspitInterface::getBodiesCB, this);
+    setRobotPose_srv = nh->advertiseService("setRobotPose", &GraspitInterface::setRobotPoseCB, this);
+    setBodyPose_srv = nh->advertiseService("setBodyPose", &GraspitInterface::setBodyPoseCB, this);
+    setGraspableBodyPose_srv = nh->advertiseService("setGraspableBodyPose", &GraspitInterface::setGraspableBodyPoseCB, this);
+    getDynamics_srv = nh->advertiseService("getDynamics", &GraspitInterface::getDynamicsCB, this);
+    setDynamics_srv = nh->advertiseService("setDynamics", &GraspitInterface::setDynamicsCB, this);
 
     ROS_INFO("GraspIt interface successfully initialized!");
 
