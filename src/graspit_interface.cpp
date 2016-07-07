@@ -240,9 +240,11 @@ bool GraspitInterface::setDynamicsCB(graspit_interface::SetDynamics::Request &re
     if(request.enableDynamics && (!graspitCore->getWorld()->dynamicsAreOn()))
     {
         graspitCore->getWorld()->turnOnDynamics();
+        ROS_INFO("Turning Dynamics On");
     }
     else if((!request.enableDynamics) && graspitCore->getWorld()->dynamicsAreOn()){
         graspitCore->getWorld()->turnOffDynamics();
+        ROS_INFO("Turning Dynamics Off");
     }
     return true;
 }
