@@ -129,19 +129,31 @@ bool GraspitInterface::getBodyCB(graspit_interface::GetBody::Request &request,
 bool GraspitInterface::getRobotsCB(graspit_interface::GetRobots::Request &request,
                 graspit_interface::GetRobots::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    for (int i=0; i < graspitCore->getWorld()->getNumRobots(); i++)
+    {
+        response.ids.push_back(i);
+    }
+    return true;
 }
 
 bool GraspitInterface::getGraspableBodiesCB(graspit_interface::GetGraspableBodies::Request &request,
                 graspit_interface::GetGraspableBodies::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    for (int i=0; i < graspitCore->getWorld()->getNumGB(); i++)
+    {
+        response.ids.push_back(i);
+    }
+    return true;
 }
 
 bool GraspitInterface::getBodiesCB(graspit_interface::GetBodies::Request &request,
                 graspit_interface::GetBodies::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    for (int i=0; i < graspitCore->getWorld()->getNumBodies(); i++)
+    {
+        response.ids.push_back(i);
+    }
+    return true;
 }
 
 bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &request,
