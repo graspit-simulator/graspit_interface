@@ -9,14 +9,14 @@
 #include <graspit_interface/Robot.h>
 #include <graspit_interface/GetRobot.h>
 #include <graspit_interface/GetGraspableBody.h>
-#include <graspit_interface/GetObstacle.h>
+#include <graspit_interface/GetBody.h>
 #include <graspit_interface/GetRobots.h>
 #include <graspit_interface/GetGraspableBodies.h>
-#include <graspit_interface/GetObstacles.h>
+#include <graspit_interface/GetBodies.h>
 #include <graspit_interface/SetDynamics.h>
 #include <graspit_interface/GetDynamics.h>
 #include <graspit_interface/SetGraspableBodyPose.h>
-#include <graspit_interface/SetObstaclePose.h>
+#include <graspit_interface/SetBodyPose.h>
 #include <graspit_interface/SetRobotPose.h>
 
 namespace GraspitInterface
@@ -31,14 +31,14 @@ private:
   // Service declarations
   ros::ServiceServer getRobot_srv;
   ros::ServiceServer getGraspableBody_srv;
-  ros::ServiceServer getObstacle_srv;
+  ros::ServiceServer getBody_srv;
 
   ros::ServiceServer getRobots_srv;
   ros::ServiceServer getGraspableBodies_srv;
-  ros::ServiceServer getObstacles_srv;
+  ros::ServiceServer getBodies_srv;
 
   ros::ServiceServer setRobotPose_srv;
-  ros::ServiceServer setObstaclePose_srv;
+  ros::ServiceServer setBodyPose_srv;
   ros::ServiceServer setGraspableBodyPose_srv;
 
   ros::ServiceServer getDynamics_srv;
@@ -51,8 +51,8 @@ private:
   bool getGraspableBodyCB(graspit_interface::GetGraspableBody::Request &request,
                           graspit_interface::GetGraspableBody::Response &response);
 
-  bool getObstacleCB(graspit_interface::GetObstacle::Request &request,
-                     graspit_interface::GetObstacle::Response &response);
+  bool getBodyCB(graspit_interface::GetBody::Request &request,
+                     graspit_interface::GetBody::Response &response);
 
   bool getRobotsCB(graspit_interface::GetRobots::Request &request,
                    graspit_interface::GetRobots::Response &response);
@@ -60,8 +60,8 @@ private:
   bool getGraspableBodiesCB(graspit_interface::GetGraspableBodies::Request &request,
                             graspit_interface::GetGraspableBodies::Response &response);
 
-  bool getObstaclesCB(graspit_interface::GetObstacles::Request &request,
-                      graspit_interface::GetObstacles::Response &response);
+  bool getBodiesCB(graspit_interface::GetBodies::Request &request,
+                      graspit_interface::GetBodies::Response &response);
 
   bool setRobotPoseCB(graspit_interface::SetRobotPose::Request &request,
                       graspit_interface::SetRobotPose::Response &response);
@@ -69,8 +69,8 @@ private:
   bool setGraspableBodyPoseCB(graspit_interface::SetGraspableBodyPose::Request &request,
                               graspit_interface::SetGraspableBodyPose::Response &response);
 
-  bool setObstaclePoseCB(graspit_interface::SetObstaclePose::Request &request,
-                         graspit_interface::SetObstaclePose::Response &response);
+  bool setBodyPoseCB(graspit_interface::SetBodyPose::Request &request,
+                         graspit_interface::SetBodyPose::Response &response);
 
   bool getDynamicsCB(graspit_interface::GetDynamics::Request &request,
                      graspit_interface::GetDynamics::Response &response);

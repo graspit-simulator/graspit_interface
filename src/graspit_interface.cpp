@@ -16,12 +16,12 @@ int GraspitInterface::init(int argc, char** argv)
 
     getRobot_srv = nh->advertiseService("getRobot", &GraspitInterface::getRobotCB, this);
     getRobot_srv = nh->advertiseService("getGraspableBody", &GraspitInterface::getGraspableBodyCB, this);
-    getRobot_srv = nh->advertiseService("getObstacle", &GraspitInterface::getObstacleCB, this);
+    getRobot_srv = nh->advertiseService("getBody", &GraspitInterface::getBodyCB, this);
     getRobot_srv = nh->advertiseService("getRobots", &GraspitInterface::getRobotsCB, this);
     getRobot_srv = nh->advertiseService("getGraspableBodies", &GraspitInterface::getGraspableBodiesCB, this);
-    getRobot_srv = nh->advertiseService("getObstacles", &GraspitInterface::getObstaclesCB, this);
+    getRobot_srv = nh->advertiseService("getBodies", &GraspitInterface::getBodiesCB, this);
     getRobot_srv = nh->advertiseService("setRobotPose", &GraspitInterface::setRobotPoseCB, this);
-    getRobot_srv = nh->advertiseService("setObstaclePose", &GraspitInterface::setObstaclePoseCB, this);
+    getRobot_srv = nh->advertiseService("setBodyPose", &GraspitInterface::setBodyPoseCB, this);
     getRobot_srv = nh->advertiseService("setGraspableBodyPose", &GraspitInterface::setGraspableBodyPoseCB, this);
     getRobot_srv = nh->advertiseService("getDynamics", &GraspitInterface::getDynamicsCB, this);
     getRobot_srv = nh->advertiseService("setDynamics", &GraspitInterface::setDynamicsCB, this);
@@ -76,13 +76,25 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
 bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::Request &request,
                 graspit_interface::GetGraspableBody::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    if (graspitCore->getWorld()->getNumGB() < request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    } else {
+        return true;
+    }
+    return true;
 }
 
-bool GraspitInterface::getObstacleCB(graspit_interface::GetObstacle::Request &request,
-                graspit_interface::GetObstacle::Response &response)
+bool GraspitInterface::getBodyCB(graspit_interface::GetBody::Request &request,
+                graspit_interface::GetBody::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    if (graspitCore->getWorld()->getNumBodies() < request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    } else {
+        return true;
+    }
+    return true;
 }
 
 bool GraspitInterface::getRobotsCB(graspit_interface::GetRobots::Request &request,
@@ -97,8 +109,8 @@ bool GraspitInterface::getGraspableBodiesCB(graspit_interface::GetGraspableBodie
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::getObstaclesCB(graspit_interface::GetObstacles::Request &request,
-                graspit_interface::GetObstacles::Response &response)
+bool GraspitInterface::getBodiesCB(graspit_interface::GetBodies::Request &request,
+                graspit_interface::GetBodies::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
@@ -115,8 +127,8 @@ bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBod
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::setObstaclePoseCB(graspit_interface::SetObstaclePose::Request &request,
-                graspit_interface::SetObstaclePose::Response &response)
+bool GraspitInterface::setBodyPoseCB(graspit_interface::SetBodyPose::Request &request,
+                graspit_interface::SetBodyPose::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
@@ -124,13 +136,21 @@ bool GraspitInterface::setObstaclePoseCB(graspit_interface::SetObstaclePose::Req
 bool GraspitInterface::getDynamicsCB(graspit_interface::GetDynamics::Request &request,
                 graspit_interface::GetDynamics::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    response.dynamicsEnabled = graspitCore->getWorld()->dynamicsAreOn();
+    return true;
 }
 
 bool GraspitInterface::setDynamicsCB(graspit_interface::SetDynamics::Request &request,
                 graspit_interface::SetDynamics::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    if(request.enableDynamics && (!graspitCore->getWorld()->dynamicsAreOn()))
+    {
+        graspitCore->getWorld()->turnOnDynamics();
+    }
+    else if((!request.enableDynamics) && graspitCore->getWorld()->dynamicsAreOn()){
+        graspitCore->getWorld()->turnOffDynamics();
+    }
+    return true;
 }
 
 
