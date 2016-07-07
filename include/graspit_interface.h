@@ -18,6 +18,9 @@
 #include <graspit_interface/SetGraspableBodyPose.h>
 #include <graspit_interface/SetBodyPose.h>
 #include <graspit_interface/SetRobotPose.h>
+#include <graspit_interface/AutoGrasp.h>
+#include <graspit_interface/AutoOpen.h>
+#include <graspit_interface/SetRobotDesiredDOF.h>
 
 namespace GraspitInterface
 {
@@ -43,6 +46,10 @@ private:
 
   ros::ServiceServer getDynamics_srv;
   ros::ServiceServer setDynamics_srv;
+
+  ros::ServiceServer autoGrasp_srv;
+  ros::ServiceServer autoOpen_srv;
+  ros::ServiceServer setRobotDesiredDOF_srv;
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -77,6 +84,15 @@ private:
 
   bool setDynamicsCB(graspit_interface::SetDynamics::Request &request,
                      graspit_interface::SetDynamics::Response &response);
+
+  bool autoGraspCB(graspit_interface::AutoGrasp::Request &request,
+                         graspit_interface::AutoGrasp::Response &response);
+
+  bool autoOpenCB(graspit_interface::AutoOpen::Request &request,
+                     graspit_interface::AutoOpen::Response &response);
+
+  bool setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
+                     graspit_interface::SetRobotDesiredDOF::Response &response);
 
 public: 
   GraspitInterface(){}

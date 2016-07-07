@@ -25,6 +25,9 @@ int GraspitInterface::init(int argc, char** argv)
     setGraspableBodyPose_srv = nh->advertiseService("setGraspableBodyPose", &GraspitInterface::setGraspableBodyPoseCB, this);
     getDynamics_srv = nh->advertiseService("getDynamics", &GraspitInterface::getDynamicsCB, this);
     setDynamics_srv = nh->advertiseService("setDynamics", &GraspitInterface::setDynamicsCB, this);
+    autoGrasp_srv = nh->advertiseService("autoGrasp", &GraspitInterface::autoGraspCB, this);
+    autoOpen_srv = nh->advertiseService("autoOpen", &GraspitInterface::autoOpenCB, this);
+    setRobotDesiredDOF_srv = nh->advertiseService("setRobotDesiredDOF", &GraspitInterface::setRobotDesiredDOFCB, this);
 
     ROS_INFO("GraspIt interface successfully initialized!");
 
@@ -245,6 +248,52 @@ bool GraspitInterface::setDynamicsCB(graspit_interface::SetDynamics::Request &re
     else if((!request.enableDynamics) && graspitCore->getWorld()->dynamicsAreOn()){
         graspitCore->getWorld()->turnOffDynamics();
         ROS_INFO("Turning Dynamics Off");
+    }
+    return true;
+}
+
+bool GraspitInterface::autoGraspCB(graspit_interface::AutoGrasp::Request &request,
+                       graspit_interface::AutoGrasp::Response &response)
+{
+    if (graspitCore->getWorld()->getNumRobots() <= request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    }
+    else{
+        graspitCore->getWorld()->getHand(request.id)->autoGrasp(true, 1.0, false);
+    }
+    return true;
+}
+
+bool GraspitInterface::autoOpenCB(graspit_interface::AutoOpen::Request &request,
+                   graspit_interface::AutoOpen::Response &response)
+{
+    if (graspitCore->getWorld()->getNumRobots() <= request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    }
+    else{
+        graspitCore->getWorld()->getHand(request.id)->autoGrasp(true, -1.0, false);
+    }
+    return true;
+}
+
+bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
+                   graspit_interface::SetRobotDesiredDOF::Response &response)
+{
+    if (graspitCore->getWorld()->getNumRobots() <= request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    }
+    else{
+        if(graspitCore->getWorld()->dynamicsAreOn())
+        {
+            graspitCore->getWorld()->getHand(request.id)->setDesiredDOFVals(request.dofs.data());
+        }
+        else
+        {
+            graspitCore->getWorld()->getHand(request.id)->forceDOFVals(request.dofs.data());
+        }
     }
     return true;
 }
