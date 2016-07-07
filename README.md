@@ -24,7 +24,7 @@ cd graspit-ros/graspit
 rm -rf graspit_source
 git clone git@github.com:jvarley/graspit.git graspit_source 
 cd graspit_source 
-checkout origin/refactor_src
+git checkout origin/refactor_src
 
 cd ~/graspit_ros_ws
 catkin_make
