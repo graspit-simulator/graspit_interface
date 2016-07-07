@@ -4,6 +4,6 @@ geometry_msgs/Pose pose
 uint8 RESULT_SUCCESS           = 0
 uint8 RESULT_INVALID_ID        = 1
 uint8 RESULT_INVALID_POSE      = 2
-uint8 RESULT_OBSTACLE_IN_COLLISION = 3
+uint8 RESULT_BODY_IN_COLLISION = 3
 
-uint8 RESULT
+uint8 result

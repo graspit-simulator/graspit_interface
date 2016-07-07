@@ -159,19 +159,72 @@ bool GraspitInterface::getBodiesCB(graspit_interface::GetBodies::Request &reques
 bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &request,
                 graspit_interface::SetRobotPose::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    if (graspitCore->getWorld()->getNumRobots() < request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    } else {
+        vec3 newTranslation(request.pose.position.x * 1000.0,
+                            request.pose.position.y * 1000.0,
+                            request.pose.position.z * 1000.0);
+
+        Quaternion newRotation(request.pose.orientation.w,
+                               request.pose.orientation.x,
+                               request.pose.orientation.y,
+                               request.pose.orientation.z);
+
+        transf newTransform(newRotation, newTranslation);
+
+        graspitCore->getWorld()->getRobot(request.id)->setTran(newTransform);
+        return true;
+    }
 }
 
 bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBodyPose::Request &request,
                 graspit_interface::SetGraspableBodyPose::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    if (graspitCore->getWorld()->getNumGB() < request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    } else {
+
+        vec3 newTranslation(request.pose.position.x * 1000.0,
+                            request.pose.position.y * 1000.0,
+                            request.pose.position.z * 1000.0);
+
+        Quaternion newRotation(request.pose.orientation.w,
+                               request.pose.orientation.x,
+                               request.pose.orientation.y,
+                               request.pose.orientation.z);
+
+        transf newTransform(newRotation, newTranslation);
+
+        graspitCore->getWorld()->getGB(request.id)->setTran(newTransform);
+        return true;
+    }
 }
 
 bool GraspitInterface::setBodyPoseCB(graspit_interface::SetBodyPose::Request &request,
                 graspit_interface::SetBodyPose::Response &response)
 {
-    ROS_ERROR("NOT IMPLEMENTED!!");
+    if (graspitCore->getWorld()->getNumBodies() < request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    } else {
+
+        vec3 newTranslation(request.pose.position.x * 1000.0,
+                            request.pose.position.y * 1000.0,
+                            request.pose.position.z * 1000.0);
+
+        Quaternion newRotation(request.pose.orientation.w,
+                               request.pose.orientation.x,
+                               request.pose.orientation.y,
+                               request.pose.orientation.z);
+
+        transf newTransform(newRotation, newTranslation);
+
+        graspitCore->getWorld()->getBody(request.id)->setTran(newTransform);
+        return true;
+    }
 }
 
 bool GraspitInterface::getDynamicsCB(graspit_interface::GetDynamics::Request &request,
