@@ -6,4 +6,4 @@ uint8 RESULT_INVALID_ID         = 1
 uint8 RESULT_INVALID_POSE       = 2
 uint8 RESULT_ROBOT_IN_COLLISION = 3
 
-unit8 RESULT
+uint8 result

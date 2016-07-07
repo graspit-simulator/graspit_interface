@@ -73,12 +73,6 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
     return true;
 }
 
-bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
-                graspit_interface::GetRobot::Response &response)
-{
-    ROS_ERROR("NOT IMPLEMENTED!!");
-}
-
 bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::Request &request,
                 graspit_interface::GetGraspableBody::Response &response)
 {
@@ -91,8 +85,8 @@ bool GraspitInterface::getObstacleCB(graspit_interface::GetObstacle::Request &re
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::getRobotsCB(graspit_interface::GetRobot::Request &request,
-                graspit_interface::GetRobot::Response &response)
+bool GraspitInterface::getRobotsCB(graspit_interface::GetRobots::Request &request,
+                graspit_interface::GetRobots::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
@@ -109,31 +103,31 @@ bool GraspitInterface::getObstaclesCB(graspit_interface::GetObstacles::Request &
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::getRobotPoseCB(graspit_interface::GetRobot::Request &request,
-                graspit_interface::GetRobotPose::Response &response)
+bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &request,
+                graspit_interface::SetRobotPose::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::getGraspableBodyPoseCB(graspit_interface::GetGraspableBody::Request &request,
-                graspit_interface::GetGraspableBodyPose::Response &response)
+bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBodyPose::Request &request,
+                graspit_interface::SetGraspableBodyPose::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::getObstaclePoseCB(graspit_interface::GetObstaclePose::Request &request,
-                graspit_interface::GetObstacle::Response &response)
+bool GraspitInterface::setObstaclePoseCB(graspit_interface::SetObstaclePose::Request &request,
+                graspit_interface::SetObstaclePose::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::getDynamics(graspit_interface::GetDynamics::Request &request,
+bool GraspitInterface::getDynamicsCB(graspit_interface::GetDynamics::Request &request,
                 graspit_interface::GetDynamics::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");
 }
 
-bool GraspitInterface::setDynamics(graspit_interface::SetDynamics::Request &request,
+bool GraspitInterface::setDynamicsCB(graspit_interface::SetDynamics::Request &request,
                 graspit_interface::SetDynamics::Response &response)
 {
     ROS_ERROR("NOT IMPLEMENTED!!");

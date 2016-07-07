@@ -61,6 +61,16 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    DIRECTORY srv
    FILES
    GetRobot.srv
+   GetDynamics.srv
+   GetGraspableBody.srv
+   GetObstacles.srv
+   GetRobots.srv
+   SetGraspableBodyPose.srv
+   SetRobotPose.srv
+   GetGraspableBodies.srv
+   GetObstacle.srv
+   SetDynamics.srv
+   SetObstaclePose.srv
  )
 
 ## Generate actions in the 'action' folder

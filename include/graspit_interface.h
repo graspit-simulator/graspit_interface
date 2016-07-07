@@ -8,6 +8,16 @@
 
 #include <graspit_interface/Robot.h>
 #include <graspit_interface/GetRobot.h>
+#include <graspit_interface/GetGraspableBody.h>
+#include <graspit_interface/GetObstacle.h>
+#include <graspit_interface/GetRobots.h>
+#include <graspit_interface/GetGraspableBodies.h>
+#include <graspit_interface/GetObstacles.h>
+#include <graspit_interface/SetDynamics.h>
+#include <graspit_interface/GetDynamics.h>
+#include <graspit_interface/SetGraspableBodyPose.h>
+#include <graspit_interface/SetObstaclePose.h>
+#include <graspit_interface/SetRobotPose.h>
 
 namespace GraspitInterface
 {
@@ -44,8 +54,8 @@ private:
   bool getObstacleCB(graspit_interface::GetObstacle::Request &request,
                      graspit_interface::GetObstacle::Response &response);
 
-  bool getRobotsCB(graspit_interface::GetRobot::Request &request,
-                   graspit_interface::GetRobot::Response &response);
+  bool getRobotsCB(graspit_interface::GetRobots::Request &request,
+                   graspit_interface::GetRobots::Response &response);
 
   bool getGraspableBodiesCB(graspit_interface::GetGraspableBodies::Request &request,
                             graspit_interface::GetGraspableBodies::Response &response);
@@ -53,14 +63,14 @@ private:
   bool getObstaclesCB(graspit_interface::GetObstacles::Request &request,
                       graspit_interface::GetObstacles::Response &response);
 
-  bool setRobotPoseCB(graspit_interface::GetRobot::Request &request,
-                      graspit_interface::GetRobotPose::Response &response);
+  bool setRobotPoseCB(graspit_interface::SetRobotPose::Request &request,
+                      graspit_interface::SetRobotPose::Response &response);
 
-  bool setGraspableBodyPoseCB(graspit_interface::GetGraspableBody::Request &request,
-                              graspit_interface::GetGraspableBodyPose::Response &response);
+  bool setGraspableBodyPoseCB(graspit_interface::SetGraspableBodyPose::Request &request,
+                              graspit_interface::SetGraspableBodyPose::Response &response);
 
-  bool setObstaclePoseCB(graspit_interface::GetObstaclePose::Request &request,
-                         graspit_interface::GetObstacle::Response &response);
+  bool setObstaclePoseCB(graspit_interface::SetObstaclePose::Request &request,
+                         graspit_interface::SetObstaclePose::Response &response);
 
   bool getDynamicsCB(graspit_interface::GetDynamics::Request &request,
                      graspit_interface::GetDynamics::Response &response);
