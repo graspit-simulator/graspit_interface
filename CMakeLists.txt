@@ -71,14 +71,9 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    SetBodyPose.srv
    GetDynamics.srv
    SetDynamics.srv
- )
-
-## Generate actions in the 'action' folder
- add_action_files(
-   FILES
-   SetRobotDesiredDOF.action
-   AutoGrasp.action
-   AutoOpen.action
+   SetRobotDesiredDOF.srv
+   AutoGrasp.srv
+   AutoOpen.srv
  )
 
 ## Generate added messages and services with any dependencies listed here
