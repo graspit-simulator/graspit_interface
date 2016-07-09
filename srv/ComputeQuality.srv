@@ -1,0 +1,9 @@
+---
+uint8 RESULT_SUCCESS    = 0
+uint8 RESULT_NO_HAND    = 1
+uint8 RESULT_COLLISION  = 2
+
+uint8 result
+
+float64 volume
+float64 epsilon

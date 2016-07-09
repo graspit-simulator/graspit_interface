@@ -29,6 +29,7 @@
 #include <graspit_interface/SaveWorld.h>
 #include <graspit_interface/SaveImage.h>
 #include <graspit_interface/ToggleAllCollisions.h>
+#include <graspit_interface/ComputeQuality.h>
 
 namespace GraspitInterface
 {
@@ -69,6 +70,8 @@ private:
 
   ros::ServiceServer saveImage_srv;
   ros::ServiceServer toggleAllCollisions_srv;
+
+  ros::ServiceServer computeQuality_srv;
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -136,6 +139,10 @@ private:
 
   bool toggleAllCollisionsCB(graspit_interface::ToggleAllCollisions::Request &request,
                      graspit_interface::ToggleAllCollisions::Response &response);
+
+
+  bool computeQualityCB(graspit_interface::ComputeQuality::Request &request,
+                         graspit_interface::ComputeQuality::Response &response);
 
 public: 
   GraspitInterface(){}

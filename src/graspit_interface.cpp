@@ -5,6 +5,9 @@
 #include "graspit_source/include/world.h"
 #include "graspit_source/include/ivmgr.h"
 
+#include "graspit_source/include/quality.h"
+#include "graspit_source/include/grasp.h"
+
 namespace GraspitInterface
 {
 
@@ -39,6 +42,8 @@ int GraspitInterface::init(int argc, char** argv)
 
     saveImage_srv = nh->advertiseService("saveImage", &GraspitInterface::saveImageCB, this);
     toggleAllCollisions_srv = nh->advertiseService("toggleAllCollisions", &GraspitInterface::toggleAllCollisionsCB, this);
+
+    computeQuality_srv = nh->advertiseService("computeQuality", &GraspitInterface::computeQualityCB, this);
 
     ROS_INFO("GraspIt interface successfully initialized!");
 
@@ -432,6 +437,42 @@ bool GraspitInterface::toggleAllCollisionsCB(graspit_interface::ToggleAllCollisi
     {
         ROS_INFO("Collision Detection is Off, objects can interpentrate");
     }
+    return true;
+}
+
+bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Request &request,
+                                         graspit_interface::ComputeQuality::Response &response)
+{
+    CollisionReport colReport;
+
+    // first test whether the hand is in collision now
+    int numCols = graspitCore->getWorld()->getCollisionReport(&colReport);
+    // if it is in collision, then there should be no reason to calculate the quality
+    if(numCols>0){
+        response.result = response.RESULT_COLLISION;
+        response.epsilon = -1.0;
+        response.volume = -1.0;
+        return true;
+    }
+
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+    if (mHand==NULL)
+    {
+        response.result = response.RESULT_NO_HAND;
+        return true;
+    }
+
+    // if there is no collision, then begin computation
+
+    QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
+    QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");
+
+    mHand->getGrasp()->updateWrenchSpaces();
+    graspitCore->getWorld()->findAllContacts();
+    graspitCore->getWorld()->updateGrasps();
+
+    response.epsilon = mEpsQual.evaluate();
+    response.volume = mVolQual.evaluate();
     return true;
 }
 
