@@ -80,6 +80,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    LoadWorld.srv
    SaveWorld.srv
    ClearWorld.srv
+   SaveImage.srv
  )
 
 ## Generate added messages and services with any dependencies listed here

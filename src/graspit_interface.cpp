@@ -3,6 +3,7 @@
 #include "graspit_source/include/graspitCore.h"
 #include "graspit_source/include/robot.h"
 #include "graspit_source/include/world.h"
+#include "graspit_source/include/ivmgr.h"
 
 namespace GraspitInterface
 {
@@ -35,6 +36,8 @@ int GraspitInterface::init(int argc, char** argv)
     clearWorld_srv = nh->advertiseService("clearWorld", &GraspitInterface::clearWorldCB, this);
     loadWorld_srv = nh->advertiseService("loadWorld", &GraspitInterface::loadWorldCB, this);
     saveWorld_srv = nh->advertiseService("saveWorld", &GraspitInterface::saveWorldCB, this);
+
+    saveImage_srv = nh->advertiseService("saveImage", &GraspitInterface::saveImageCB, this);
 
 
     ROS_INFO("GraspIt interface successfully initialized!");
@@ -404,6 +407,18 @@ bool GraspitInterface::clearWorldCB(graspit_interface::ClearWorld::Request &requ
     return true;
 }
 
+bool GraspitInterface::saveImageCB(graspit_interface::SaveImage::Request &request,
+                   graspit_interface::SaveImage::Response &response)
+{
+    QString filename = QString(getenv("GRASPIT"))+
+            QString("/images/") +
+            QString(request.filename.data()) +
+            QString(".jpg");
+
+    ROS_INFO("Saving Image: %s",filename.toStdString().c_str());
+    graspitCore->getIVmgr()->saveImage(filename);
+    return true;
+}
 
 
 }

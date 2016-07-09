@@ -27,6 +27,7 @@
 #include <graspit_interface/LoadWorld.h>
 #include <graspit_interface/ClearWorld.h>
 #include <graspit_interface/SaveWorld.h>
+#include <graspit_interface/SaveImage.h>
 
 namespace GraspitInterface
 {
@@ -64,6 +65,8 @@ private:
   ros::ServiceServer clearWorld_srv;
   ros::ServiceServer loadWorld_srv;
   ros::ServiceServer saveWorld_srv;
+
+  ros::ServiceServer saveImage_srv;
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -125,6 +128,9 @@ private:
 
   bool clearWorldCB(graspit_interface::ClearWorld::Request &request,
                      graspit_interface::ClearWorld::Response &response);
+
+  bool saveImageCB(graspit_interface::SaveImage::Request &request,
+                     graspit_interface::SaveImage::Response &response);
 
 public: 
   GraspitInterface(){}
