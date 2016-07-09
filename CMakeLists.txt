@@ -83,6 +83,8 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    SaveImage.srv
    ToggleAllCollisions.srv
    ComputeQuality.srv
+   ApproachToContact.srv
+   FindInitialContact.srv
  )
 
 ## Generate added messages and services with any dependencies listed here

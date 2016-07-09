@@ -45,6 +45,9 @@ int GraspitInterface::init(int argc, char** argv)
 
     computeQuality_srv = nh->advertiseService("computeQuality", &GraspitInterface::computeQualityCB, this);
 
+    approachToContact_srv = nh->advertiseService("approahToContact", &GraspitInterface::approachToContactCB, this);
+    findInitialContact_srv = nh->advertiseService("findInitialContact", &GraspitInterface::findInitialContactCB, this);
+
     ROS_INFO("GraspIt interface successfully initialized!");
 
     return 0;
@@ -473,6 +476,32 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
     response.epsilon = mEpsQual.evaluate();
     response.volume = mVolQual.evaluate();
     return true;
+}
+
+bool GraspitInterface::approachToContactCB(graspit_interface::ApproachToContact::Request &request,
+                                           graspit_interface::ApproachToContact::Response &response)
+{
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+     if (mHand==NULL)
+     {
+         response.result = response.RESULT_NO_HAND;
+         return true;
+     }
+     mHand->approachToContact(request.moveDist, request.oneStep);
+     return true;
+}
+
+bool GraspitInterface::findInitialContactCB(graspit_interface::FindInitialContact::Request &request,
+                                            graspit_interface::FindInitialContact::Response &response)
+                  {
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+     if (mHand==NULL)
+     {
+         response.result = response.RESULT_NO_HAND;
+         return true;
+     }
+     mHand->findInitialContact(request.moveDist);
+     return true;
 }
 
 }
