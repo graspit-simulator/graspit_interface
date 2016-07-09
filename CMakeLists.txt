@@ -74,6 +74,9 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    SetRobotDesiredDOF.srv
    AutoGrasp.srv
    AutoOpen.srv
+   ImportRobot.srv
+   ImportObstacle.srv
+   ImportGraspableBody.srv
  )
 
 ## Generate added messages and services with any dependencies listed here

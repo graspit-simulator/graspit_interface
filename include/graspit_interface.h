@@ -21,6 +21,9 @@
 #include <graspit_interface/AutoGrasp.h>
 #include <graspit_interface/AutoOpen.h>
 #include <graspit_interface/SetRobotDesiredDOF.h>
+#include <graspit_interface/ImportRobot.h>
+#include <graspit_interface/ImportGraspableBody.h>
+#include <graspit_interface/ImportObstacle.h>
 
 namespace GraspitInterface
 {
@@ -50,6 +53,10 @@ private:
   ros::ServiceServer autoGrasp_srv;
   ros::ServiceServer autoOpen_srv;
   ros::ServiceServer setRobotDesiredDOF_srv;
+
+  ros::ServiceServer importRobot_srv;
+  ros::ServiceServer importObstacle_srv;
+  ros::ServiceServer importGraspableBody_srv;
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -93,6 +100,15 @@ private:
 
   bool setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
                      graspit_interface::SetRobotDesiredDOF::Response &response);
+
+  bool importRobotCB(graspit_interface::ImportRobot::Request &request,
+                         graspit_interface::ImportRobot::Response &response);
+
+  bool importObstacleCB(graspit_interface::ImportObstacle::Request &request,
+                     graspit_interface::ImportObstacle::Response &response);
+
+  bool importGraspableBodyCB(graspit_interface::ImportGraspableBody::Request &request,
+                     graspit_interface::ImportGraspableBody::Response &response);
 
 public: 
   GraspitInterface(){}

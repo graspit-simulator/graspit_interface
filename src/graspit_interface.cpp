@@ -29,6 +29,11 @@ int GraspitInterface::init(int argc, char** argv)
     autoOpen_srv = nh->advertiseService("autoOpen", &GraspitInterface::autoOpenCB, this);
     setRobotDesiredDOF_srv = nh->advertiseService("setRobotDesiredDOF", &GraspitInterface::setRobotDesiredDOFCB, this);
 
+    importRobot_srv = nh->advertiseService("importRobot", &GraspitInterface::importRobotCB, this);
+    importObstacle_srv = nh->advertiseService("importObstacle", &GraspitInterface::importObstacleCB, this);
+    importGraspableBody_srv = nh->advertiseService("importGraspableBody", &GraspitInterface::importGraspableBodyCB, this);
+
+
     ROS_INFO("GraspIt interface successfully initialized!");
 
     return 0;
@@ -294,6 +299,61 @@ bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDO
         {
             graspitCore->getWorld()->getHand(request.id)->forceDOFVals(request.dofs.data());
         }
+    }
+    return true;
+}
+
+bool GraspitInterface::importRobotCB(graspit_interface::ImportRobot::Request &request,
+                       graspit_interface::ImportRobot::Response &response)
+{
+    QString filename = QString(getenv("GRASPIT"))+
+            QString("/models/robots/") +
+            QString(request.filename.data()) +
+            QString("/") +
+            QString(request.filename.data()) +
+            QString(".xml");
+
+    ROS_INFO("Loading %s",filename.toStdString().c_str());
+
+    Robot * r = graspitCore->getWorld()->importRobot(filename);
+    if(r == NULL){
+        response.result = response.RESULT_FAILURE;
+        return true;
+    }
+    return true;
+}
+
+bool GraspitInterface::importObstacleCB(graspit_interface::ImportObstacle::Request &request,
+                   graspit_interface::ImportObstacle::Response &response)
+{
+    QString filename = QString(getenv("GRASPIT"))+
+            QString("/models/obstacles/") +
+            QString(request.filename.data()) +
+            QString(".xml");
+
+    ROS_INFO("Loading %s", filename.toStdString().c_str());
+
+    Body * b = graspitCore->getWorld()->importBody(QString("Body"),filename);
+    if(b == NULL){
+        response.result = response.RESULT_FAILURE;
+        return true;
+    }
+    return true;
+}
+
+bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableBody::Request &request,
+                   graspit_interface::ImportGraspableBody::Response &response)
+{
+    QString filename = QString(getenv("GRASPIT"))+
+            QString("/models/objects/") +
+            QString(request.filename.data()) +
+            QString(".xml");
+
+    ROS_INFO("Loading %s",filename.toStdString().c_str());
+    Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),filename);
+    if(b == NULL){
+        response.result = response.RESULT_FAILURE;
+        return true;
     }
     return true;
 }
