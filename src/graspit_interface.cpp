@@ -615,7 +615,7 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
     startPlanner = true;
 
     ROS_INFO("Waiting For Planner to Start");
-    while(startPlanner)
+    while(!plannerStarted)
     {
         sleep(0.1);
     }
