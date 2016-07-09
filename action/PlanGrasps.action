@@ -10,9 +10,9 @@ int32 max_steps
 # Result
 Grasp[] grasps
 float64[] energies
-uint8 search_energy
+SearchEnergy search_energy
 ---
 # Feedback 
 Grasp[] grasps
 float64[] energies
-uint8 search_energy
+SearchEnergy search_energy

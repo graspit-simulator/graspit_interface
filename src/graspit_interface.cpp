@@ -676,7 +676,7 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
         ROS_INFO("Pushing back grasp");
         result_.grasps.push_back(g);
         result_.energies.push_back(gps->getEnergy());
-        //result_.search_energy = goal->search_energy;
+        result_.search_energy = goal->search_energy;
     }
 
     ROS_INFO("Showing Grasp 0");
