@@ -633,6 +633,52 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
 
     ROS_INFO("Planner Is Finished");
 
+    ROS_INFO("Publishing Result");
+    for(int i = 0; i < mPlanner->getListSize(); i++)
+    {
+        ROS_INFO("Loading Grasp");
+        const GraspPlanningState *gps  = mPlanner->getGrasp(i);
+        gps->execute(mHand);
+        mHand->autoGrasp(false,1.0,false);
+
+        ROS_INFO("Building Pose");
+        geometry_msgs::Pose pose;
+        transf t = mHand->getTran();
+        pose.position.x = t.translation().x() / 1000.0;
+        pose.position.y = t.translation().y() / 1000.0;;
+        pose.position.z = t.translation().z() / 1000.0;;
+        pose.orientation.w = t.rotation().w;
+        pose.orientation.x = t.rotation().x;
+        pose.orientation.y = t.rotation().y;
+        pose.orientation.z = t.rotation().z;
+
+        graspit_interface::Grasp g;
+        g.graspable_body_id = goal->graspable_body_id;
+
+        double dof[mHand->getNumDOF()];
+        mHand->getDOFVals(dof);
+        for(int i = 0; i <mHand->getNumDOF(); ++i)
+        {
+            g.dofs.push_back(dof[i]);
+        }
+
+        g.pose = pose;
+        mHand->getGrasp()->update();
+        QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
+        QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");
+
+        graspitCore->getWorld()->findAllContacts();
+        graspitCore->getWorld()->updateGrasps();
+
+        g.epsilon_quality= mEpsQual.evaluate();
+        g.volume_quality = mVolQual.evaluate();
+
+        ROS_INFO("Pushing back grasp");
+        result_.grasps.push_back(g);
+        result_.energies.push_back(gps->getEnergy());
+        //result_.search_energy = goal->search_energy;
+    }
+
     ROS_INFO("Showing Grasp 0");
     if(mPlanner->getListSize() > 0)
     {
@@ -649,7 +695,6 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
     startPlanner = false;
     plannerStarted = false;
 
-    ROS_INFO("Publishing Result");
     plan_grasps_as->setSucceeded(result_);
 
     ROS_INFO("Action ServerCB Finished");
