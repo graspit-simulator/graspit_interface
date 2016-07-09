@@ -81,6 +81,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    SaveWorld.srv
    ClearWorld.srv
    SaveImage.srv
+   ToggleAllCollisions.srv
  )
 
 ## Generate added messages and services with any dependencies listed here

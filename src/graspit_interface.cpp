@@ -38,7 +38,7 @@ int GraspitInterface::init(int argc, char** argv)
     saveWorld_srv = nh->advertiseService("saveWorld", &GraspitInterface::saveWorldCB, this);
 
     saveImage_srv = nh->advertiseService("saveImage", &GraspitInterface::saveImageCB, this);
-
+    toggleAllCollisions_srv = nh->advertiseService("toggleAllCollisions", &GraspitInterface::toggleAllCollisionsCB, this);
 
     ROS_INFO("GraspIt interface successfully initialized!");
 
@@ -420,5 +420,19 @@ bool GraspitInterface::saveImageCB(graspit_interface::SaveImage::Request &reques
     return true;
 }
 
+bool GraspitInterface::toggleAllCollisionsCB(graspit_interface::ToggleAllCollisions::Request &request,
+                   graspit_interface::ToggleAllCollisions::Response &response)
+{
+    graspitCore->getWorld()->toggleAllCollisions(request.enableCollisions);
+    if(request.enableCollisions)
+    {
+        ROS_INFO("Collision Detection is On, objects cannot interpentrate");
+    }
+    else
+    {
+        ROS_INFO("Collision Detection is Off, objects can interpentrate");
+    }
+    return true;
+}
 
 }
