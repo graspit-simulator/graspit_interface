@@ -11,7 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     roscpp
     graspit
-    actionlib)
+    actionlib
+    actionlib_msgs)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -54,6 +55,11 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    Body.msg
    GraspableBody.msg
    Robot.msg
+   Grasp.msg
+   Planner.msg
+   SearchEnergy.msg
+   SearchSpace.msg
+   Energy.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -87,13 +93,21 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    FindInitialContact.srv
  )
 
+
+ add_action_files(
+   DIRECTORY action
+   FILES
+   PlanGrasps.action
+ )
+
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES
-   std_msgs  # Or other packages containing msgs
+   std_msgs 
    sensor_msgs
    geometry_msgs
    actionlib_msgs
+   actionlib
  )
 
 ################################################

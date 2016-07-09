@@ -7,6 +7,9 @@
 
 #include "graspit_source/include/quality.h"
 #include "graspit_source/include/grasp.h"
+#include "graspit_source/include/EGPlanner/searchState.h"
+#include "graspit_source/include/EGPlanner/simAnnPlanner.h"
+#include "graspit_source/include/EGPlanner/egPlanner.h"
 
 namespace GraspitInterface
 {
@@ -48,6 +51,16 @@ int GraspitInterface::init(int argc, char** argv)
     approachToContact_srv = nh->advertiseService("approahToContact", &GraspitInterface::approachToContactCB, this);
     findInitialContact_srv = nh->advertiseService("findInitialContact", &GraspitInterface::findInitialContactCB, this);
 
+    plan_grasps_as = new actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction>(*nh, "planGrasps",
+                                                                                            boost::bind(&GraspitInterface::PlanGraspsCB, this, _1), false);
+    plan_grasps_as->start();
+
+    startPlanner = false;
+    plannerStarted = false;
+    requestRender = false;
+    mPlanner = NULL;
+    mHandObjectState = NULL;
+
     ROS_INFO("GraspIt interface successfully initialized!");
 
     return 0;
@@ -55,6 +68,30 @@ int GraspitInterface::init(int argc, char** argv)
 
 int GraspitInterface::mainLoop()
 {
+    //Planner Must be started by mainthread, so it cannot be
+    //Started inside the callback for the action server.
+    if(startPlanner)
+    {
+        ROS_INFO("Planner Starting in Mainloop");
+        mPlanner->startPlanner();
+        startPlanner = false;
+        plannerStarted = true;
+    }
+
+    //Rendering must be handled my the main thread
+    //So if one of the action servers wants a render
+    //They set requestRender to true, and it will be rendered here.
+    if(requestRender)
+    {
+        requestRender = false;
+
+        ROS_INFO("Rendering");
+        if(graspitCore->getIVmgr())
+        {
+            graspitCore->getIVmgr()->getViewer()->render();
+        }
+    }
+
     ros::spinOnce();
     return 0;
 } 
@@ -502,6 +539,120 @@ bool GraspitInterface::findInitialContactCB(graspit_interface::FindInitialContac
      }
      mHand->findInitialContact(request.moveDist);
      return true;
+}
+
+void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal)
+{
+    ROS_INFO("Getting Hand");
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+    if(mHand == NULL)
+    {
+        ROS_INFO("Planning Hand is NULL");
+    }
+    GraspableBody *mObject = graspitCore->getWorld()->getGB(0);
+    if(mHand == NULL)
+    {
+        ROS_INFO("Planning Object is NULL");
+    }
+
+    ROS_INFO("Initing mHandObjectState");
+    mHandObjectState = new GraspPlanningState(mHand);
+//    if ( goal->search_space.Type == graspit_interface::SearchSpace.Type ) {
+//     mHandObjectState.setPositionType(SPACE_COMPLETE);
+//     mHandObjectState.setRefTran( mObject->getTran() );
+//    }
+//    else if ( s==QString("Axis-angle") ) {
+//     mHandObjectState->setPositionType(SPACE_AXIS_ANGLE);
+//     mHandObjectState->setRefTran( mObject->getTran() );
+//    } else if ( s==QString("Ellipsoid") ) {
+//     mHandObjectState->setPositionType(SPACE_ELLIPSOID);
+//     mHandObjectState->setRefTran( mObject->getTran() );
+//    } else if ( s==QString("Approach") ) {
+//     mHandObjectState->setPositionType(SPACE_APPROACH);
+//     mHandObjectState->setRefTran( mHand->getTran() );
+//    } else {
+//     fprintf(stderr,"WRONG SEARCH TYPE IN DROP BOX!\n");
+//    }
+    ROS_INFO("Initing mHandObjectState");
+    mHandObjectState = new GraspPlanningState(mHand);
+    mHandObjectState->setObject(mObject);
+    mHandObjectState->setPositionType(SPACE_AXIS_ANGLE);
+    mHandObjectState->setRefTran(mObject->getTran());
+    mHandObjectState->reset();
+
+    ROS_INFO("Initing mPlanner");
+    mPlanner = new SimAnnPlanner(mHand);
+
+    mPlanner->setEnergyType(ENERGY_CONTACT_QUALITY);
+    mPlanner->setContactType(CONTACT_PRESET);
+    mPlanner->setModelState(mHandObjectState);
+    mPlanner->setMaxSteps(35000);
+
+    mPlanner->resetPlanner();
+
+//    QString s = energyBox->currentText();
+//    if ( s == QString("Hand Contacts") ) {
+//     mPlanner->setEnergyType(ENERGY_CONTACT);
+//    } else if ( s == QString("Potential Quality") ) {
+//     mPlanner->setEnergyType(ENERGY_POTENTIAL_QUALITY);
+//    } else if ( s == QString("Autograsp Quality") ) {
+//     mPlanner->setEnergyType(ENERGY_AUTOGRASP_QUALITY);
+//    } else if ( s == QString("Contacts AND Quality") ) {
+//     mPlanner->setEnergyType(ENERGY_CONTACT_QUALITY);
+//    } else if ( s == QString("Guided Autograsp") ) {
+//     mPlanner->setEnergyType(ENERGY_GUIDED_AUTOGRASP);
+//    } else {
+//     fprintf(stderr,"WRONG ENERGY TYPE IN DROP BOX!\n");
+//    }
+
+//    //contact type
+//    if ( setContactsBox->isChecked() ) {
+//     mPlanner->setContactType(CONTACT_PRESET);
+//    } else {
+//     mPlanner->setContactType(CONTACT_LIVE);
+//    }
+
+    startPlanner = true;
+
+    ROS_INFO("Waiting For Planner to Start");
+    while(startPlanner)
+    {
+        sleep(0.1);
+    }
+
+    ROS_INFO("Waiting For Planner to Finish");
+    while(mPlanner->isActive())
+    {
+        sleep(0.1);
+//        for(int i=0; i < mPlanner->getListSize(); i++)
+//        {
+//            mPlanner->getGrasp(i);
+//        }
+//        plan_grasps_as->publishFeedback(feedback_);
+    }
+
+    ROS_INFO("Planner Is Finished");
+
+    ROS_INFO("Showing Grasp 0");
+    if(mPlanner->getListSize() > 0)
+    {
+        mPlanner->showGrasp(0);
+    }
+
+    requestRender = true;
+
+    ROS_INFO("Cleaning Up");
+    delete mPlanner;
+    delete mHandObjectState;
+    mPlanner = NULL;
+    mHandObjectState = NULL;
+    startPlanner = false;
+    plannerStarted = false;
+
+    ROS_INFO("Publishing Result");
+    plan_grasps_as->setSucceeded(result_);
+
+    ROS_INFO("Action ServerCB Finished");
 }
 
 }
