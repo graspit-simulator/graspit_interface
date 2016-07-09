@@ -77,6 +77,9 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    ImportRobot.srv
    ImportObstacle.srv
    ImportGraspableBody.srv
+   LoadWorld.srv
+   SaveWorld.srv
+   ClearWorld.srv
  )
 
 ## Generate added messages and services with any dependencies listed here

@@ -4,7 +4,6 @@
 #include "graspit_source/include/robot.h"
 #include "graspit_source/include/world.h"
 
-
 namespace GraspitInterface
 {
 
@@ -32,6 +31,10 @@ int GraspitInterface::init(int argc, char** argv)
     importRobot_srv = nh->advertiseService("importRobot", &GraspitInterface::importRobotCB, this);
     importObstacle_srv = nh->advertiseService("importObstacle", &GraspitInterface::importObstacleCB, this);
     importGraspableBody_srv = nh->advertiseService("importGraspableBody", &GraspitInterface::importGraspableBodyCB, this);
+
+    clearWorld_srv = nh->advertiseService("clearWorld", &GraspitInterface::clearWorldCB, this);
+    loadWorld_srv = nh->advertiseService("loadWorld", &GraspitInterface::loadWorldCB, this);
+    saveWorld_srv = nh->advertiseService("saveWorld", &GraspitInterface::saveWorldCB, this);
 
 
     ROS_INFO("GraspIt interface successfully initialized!");
@@ -357,6 +360,50 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
     }
     return true;
 }
+
+
+bool GraspitInterface::loadWorldCB(graspit_interface::LoadWorld::Request &request,
+                       graspit_interface::LoadWorld::Response &response)
+{
+    QString filename = QString(getenv("GRASPIT"))+
+            QString("/worlds/") +
+            QString(request.filename.data()) +
+            QString(".xml");
+
+    ROS_INFO("Loading World: %s",filename.toStdString().c_str());
+    int result = graspitCore->getWorld()->load(filename);
+    if(result == FAILURE){
+        response.result = response.RESULT_FAILURE;
+        return true;
+    }
+    return true;
+}
+
+bool GraspitInterface::saveWorldCB(graspit_interface::SaveWorld::Request &request,
+                   graspit_interface::SaveWorld::Response &response)
+{
+    QString filename = QString(getenv("GRASPIT"))+
+            QString("/worlds/") +
+            QString(request.filename.data()) +
+            QString(".xml");
+
+    ROS_INFO("Saving World: %s",filename.toStdString().c_str());
+    int result = graspitCore->getWorld()->save(filename);
+    if(result == FAILURE){
+        response.result = response.RESULT_FAILURE;
+        return true;
+    }
+    return true;
+}
+
+bool GraspitInterface::clearWorldCB(graspit_interface::ClearWorld::Request &request,
+                   graspit_interface::ClearWorld::Response &response)
+{
+    ROS_INFO("Emptying World");
+    graspitCore->emptyWorld();
+    return true;
+}
+
 
 
 }

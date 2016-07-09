@@ -24,6 +24,9 @@
 #include <graspit_interface/ImportRobot.h>
 #include <graspit_interface/ImportGraspableBody.h>
 #include <graspit_interface/ImportObstacle.h>
+#include <graspit_interface/LoadWorld.h>
+#include <graspit_interface/ClearWorld.h>
+#include <graspit_interface/SaveWorld.h>
 
 namespace GraspitInterface
 {
@@ -57,6 +60,10 @@ private:
   ros::ServiceServer importRobot_srv;
   ros::ServiceServer importObstacle_srv;
   ros::ServiceServer importGraspableBody_srv;
+
+  ros::ServiceServer clearWorld_srv;
+  ros::ServiceServer loadWorld_srv;
+  ros::ServiceServer saveWorld_srv;
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -109,6 +116,15 @@ private:
 
   bool importGraspableBodyCB(graspit_interface::ImportGraspableBody::Request &request,
                      graspit_interface::ImportGraspableBody::Response &response);
+
+  bool loadWorldCB(graspit_interface::LoadWorld::Request &request,
+                         graspit_interface::LoadWorld::Response &response);
+
+  bool saveWorldCB(graspit_interface::SaveWorld::Request &request,
+                     graspit_interface::SaveWorld::Response &response);
+
+  bool clearWorldCB(graspit_interface::ClearWorld::Request &request,
+                     graspit_interface::ClearWorld::Response &response);
 
 public: 
   GraspitInterface(){}
