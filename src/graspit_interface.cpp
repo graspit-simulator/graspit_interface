@@ -467,7 +467,6 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
     QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
     QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");
 
-    mHand->getGrasp()->updateWrenchSpaces();
     graspitCore->getWorld()->findAllContacts();
     graspitCore->getWorld()->updateGrasps();
 
