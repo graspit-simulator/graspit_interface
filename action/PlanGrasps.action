@@ -14,6 +14,5 @@ float64[] energies
 SearchEnergy search_energy
 ---
 # Feedback 
-Grasp[] grasps
-float64[] energies
-SearchEnergy search_energy
+int32 current_step
+int32 current_num_grasps

@@ -60,6 +60,8 @@ int GraspitInterface::init(int argc, char** argv)
     startPlanner = false;
     plannerStarted = false;
     requestRender = false;
+    buildPlannerResponse = false;
+    finishedBuildingResponse = true;
     mPlanner = NULL;
     mHandObjectState = NULL;
 
@@ -75,6 +77,11 @@ int GraspitInterface::mainLoop()
     if(startPlanner)
     {
         startPlannerInMainLoop();
+    }
+
+    if(buildPlannerResponse)
+    {
+        buildPlannerResponseInMainLoop();
     }
 
     //Rendering must be handled my the main thread
@@ -544,7 +551,7 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
         ROS_INFO("Planning Hand is NULL");
     }
     GraspableBody *mObject = graspitCore->getWorld()->getGB(0);
-    if(mHand == NULL)
+    if(mObject == NULL)
     {
         ROS_INFO("Planning Object is NULL");
     }
@@ -560,68 +567,23 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
     ROS_INFO("Waiting For Planner to Finish");
     while(mPlanner->isActive())
     {
-        sleep(0.1);
+        sleep(1.0);
         ROS_INFO("Curret Planner Step: %d", mPlanner->getCurrentStep());
-//        for(int i=0; i < mPlanner->getListSize(); i++)
-//        {
-//            mPlanner->getGrasp(i);
-//        }
-//        plan_grasps_as->publishFeedback(feedback_);
+        ROS_INFO("Curret Num Grasps: %d", mPlanner->getListSize());
+
+        feedback_.current_step = mPlanner->getCurrentStep();
+        feedback_.current_num_grasps = mPlanner->getListSize();
+        plan_grasps_as->publishFeedback(feedback_);
+    }
+
+    buildPlannerResponse = true;
+
+    while(!finishedBuildingResponse)
+    {
+        sleep(1.0);
     }
 
     ROS_INFO("Planner Is Finished");
-
-    ROS_INFO("Publishing Result");
-    for(int i = 0; i < mPlanner->getListSize(); i++)
-    {
-        ROS_INFO("Loading Grasp");
-        const GraspPlanningState *gps  = mPlanner->getGrasp(i);
-        gps->execute(mHand);
-        mHand->autoGrasp(false,1.0,false);
-
-        ROS_INFO("Building Pose");
-        geometry_msgs::Pose pose;
-        transf t = mHand->getTran();
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
-
-        graspit_interface::Grasp g;
-        g.graspable_body_id = goal.graspable_body_id;
-
-        double dof[mHand->getNumDOF()];
-        mHand->getDOFVals(dof);
-        for(int i = 0; i <mHand->getNumDOF(); ++i)
-        {
-            g.dofs.push_back(dof[i]);
-        }
-
-        g.pose = pose;
-        mHand->getGrasp()->update();
-        QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
-        QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");
-
-        graspitCore->getWorld()->findAllContacts();
-        graspitCore->getWorld()->updateGrasps();
-
-        g.epsilon_quality= mEpsQual.evaluate();
-        g.volume_quality = mVolQual.evaluate();
-
-        ROS_INFO("Pushing back grasp");
-        result_.grasps.push_back(g);
-        result_.energies.push_back(gps->getEnergy());
-        result_.search_energy = _goal->search_energy;
-    }
-
-    ROS_INFO("Showing Grasp 0");
-    if(mPlanner->getListSize() > 0)
-    {
-        mPlanner->showGrasp(0);
-    }
 
     requestRender = true;
 
@@ -657,7 +619,7 @@ void GraspitInterface::startPlannerInMainLoop()
         ROS_INFO("Planning Hand is NULL");
     }
     GraspableBody *mObject = graspitCore->getWorld()->getGB(0);
-    if(mHand == NULL)
+    if(mObject == NULL)
     {
         ROS_INFO("Planning Object is NULL");
     }
@@ -785,6 +747,71 @@ void GraspitInterface::startPlannerInMainLoop()
     mPlanner->startPlanner();
     startPlanner = false;
     plannerStarted = true;
+}
+
+
+void GraspitInterface::buildPlannerResponseInMainLoop()
+{
+    buildPlannerResponse = false;
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+    if(mHand == NULL)
+    {
+        ROS_INFO("Planning Hand is NULL");
+    }
+
+    ROS_INFO("Publishing Result");
+    for(int i = 0; i < mPlanner->getListSize(); i++)
+    {
+        ROS_INFO("Loading Grasp");
+        const GraspPlanningState *gps  = mPlanner->getGrasp(i);
+        gps->execute(mHand);
+        mHand->autoGrasp(false,1.0,false);
+
+        ROS_INFO("Building Pose");
+        geometry_msgs::Pose pose;
+        transf t = mHand->getTran();
+        pose.position.x = t.translation().x() / 1000.0;
+        pose.position.y = t.translation().y() / 1000.0;;
+        pose.position.z = t.translation().z() / 1000.0;;
+        pose.orientation.w = t.rotation().w;
+        pose.orientation.x = t.rotation().x;
+        pose.orientation.y = t.rotation().y;
+        pose.orientation.z = t.rotation().z;
+
+        graspit_interface::Grasp g;
+        g.graspable_body_id = goal.graspable_body_id;
+
+        double dof[mHand->getNumDOF()];
+        mHand->getDOFVals(dof);
+        for(int i = 0; i <mHand->getNumDOF(); ++i)
+        {
+            g.dofs.push_back(dof[i]);
+        }
+
+        g.pose = pose;
+        mHand->getGrasp()->update();
+        QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
+        QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");
+
+        graspitCore->getWorld()->findAllContacts();
+        graspitCore->getWorld()->updateGrasps();
+
+        g.epsilon_quality= mEpsQual.evaluate();
+        g.volume_quality = mVolQual.evaluate();
+
+        ROS_INFO("Pushing back grasp");
+        result_.grasps.push_back(g);
+        result_.energies.push_back(gps->getEnergy());
+        result_.search_energy = goal.search_energy;
+    }
+
+    ROS_INFO("Showing Grasp 0");
+    if(mPlanner->getListSize() > 0)
+    {
+        mPlanner->showGrasp(0);
+    }
+
+    finishedBuildingResponse=true;
 }
 
 void GraspitInterface::renderInMainLoop()

@@ -99,6 +99,8 @@ private:
   SimAnnPlanner *mPlanner;
   bool startPlanner;
   bool plannerStarted;
+  bool buildPlannerResponse;
+  bool finishedBuildingResponse;
 
   bool requestRender;
 
@@ -186,6 +188,7 @@ private:
   //the planner must be started in the mainloop, not the action server callback
   void startPlannerInMainLoop();
   void renderInMainLoop();
+  void buildPlannerResponseInMainLoop();
 
 public: 
   GraspitInterface(){}
