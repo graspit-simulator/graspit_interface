@@ -93,6 +93,7 @@ private:
   actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction> *plan_grasps_as;
   graspit_interface::PlanGraspsFeedback feedback_;
   graspit_interface::PlanGraspsResult result_;
+  graspit_interface::PlanGraspsGoal goal;
 
   GraspPlanningState *mHandObjectState;
   SimAnnPlanner *mPlanner;
@@ -181,6 +182,10 @@ private:
 
   //ActionServer callbacks
   void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
+
+  //the planner must be started in the mainloop, not the action server callback
+  void startPlannerInMainLoop();
+  void renderInMainLoop();
 
 public: 
   GraspitInterface(){}

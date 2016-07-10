@@ -59,6 +59,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    Planner.msg
    SearchEnergy.msg
    SearchSpace.msg
+   SearchContact.msg
    Energy.msg
  )
 

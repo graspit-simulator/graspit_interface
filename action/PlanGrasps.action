@@ -4,6 +4,7 @@ int32 graspable_body_id
 Planner planner
 SearchEnergy search_energy
 SearchSpace search_space
+SearchContact search_contact
 
 int32 max_steps
 ---
