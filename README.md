@@ -1,7 +1,7 @@
 # graspit_interface
 ROS interface for GraspIt!.  This repo contains a plugin for GraspIt! that exposes many of the commonly used features within GraspIt! as ros services and action servers.  This makes it easier for developers to interface with GraspIt! programatically without writing their own GraspIt! plugin. 
 
-While it is entirely possible to write your own ros service clients that this plugin exposes, if you're using python, this is already done for you in the graspit_commander package:
+While it is entirely possible to write your own client code to use the inerfaces that this plugin exposes, if you're using python, this is already done for you in the graspit_commander package:
 https://github.com/CURG/graspit_commander
 
 
