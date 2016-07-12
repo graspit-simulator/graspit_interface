@@ -1,11 +1,19 @@
 #ifndef _GRASPIT_INTERFACE_H_
 #define _GRASPIT_INTERFACE_H_ 
 
+//ROS includes
+#include <ros/ros.h>
+#include <actionlib/server/simple_action_server.h>
+
 //GraspIt! includes
 #include <graspit_source/include/plugin.h>
+#include "graspit_source/include/EGPlanner/searchState.h"
+#include "graspit_source/include/EGPlanner/simAnnPlanner.h"
 
-#include <ros/ros.h>
+//Message includes
+#include <graspit_interface/SearchSpace.h>
 
+// Service includes
 #include <graspit_interface/Robot.h>
 #include <graspit_interface/GetRobot.h>
 #include <graspit_interface/GetGraspableBody.h>
@@ -32,6 +40,9 @@
 #include <graspit_interface/ComputeQuality.h>
 #include <graspit_interface/ApproachToContact.h>
 #include <graspit_interface/FindInitialContact.h>
+
+// ActionServer includes
+#include <graspit_interface/PlanGraspsAction.h>
 
 namespace GraspitInterface
 {
@@ -77,6 +88,22 @@ private:
 
   ros::ServiceServer approachToContact_srv;
   ros::ServiceServer findInitialContact_srv;
+
+  // ActionServer declarations
+  actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction> *plan_grasps_as;
+  graspit_interface::PlanGraspsFeedback feedback_;
+  graspit_interface::PlanGraspsResult result_;
+  graspit_interface::PlanGraspsGoal goal;
+
+  GraspPlanningState *mHandObjectState;
+  SimAnnPlanner *mPlanner;
+  bool startPlanner;
+  bool plannerStarted;
+  bool buildPlannerResponse;
+  bool finishedBuildingResponse;
+
+  bool requestRender;
+
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -154,6 +181,14 @@ private:
 
   bool findInitialContactCB(graspit_interface::FindInitialContact::Request &request,
                             graspit_interface::FindInitialContact::Response &response);
+
+  //ActionServer callbacks
+  void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
+
+  //the planner must be started in the mainloop, not the action server callback
+  void startPlannerInMainLoop();
+  void renderInMainLoop();
+  void buildPlannerResponseInMainLoop();
 
 public: 
   GraspitInterface(){}

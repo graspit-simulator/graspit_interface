@@ -7,6 +7,11 @@
 
 #include "graspit_source/include/quality.h"
 #include "graspit_source/include/grasp.h"
+#include "graspit_source/include/EGPlanner/searchState.h"
+#include "graspit_source/include/EGPlanner/egPlanner.h"
+#include "graspit_source/include/EGPlanner/simAnnPlanner.h"
+#include "graspit_source/include/EGPlanner/guidedPlanner.h"
+
 
 namespace GraspitInterface
 {
@@ -48,6 +53,18 @@ int GraspitInterface::init(int argc, char** argv)
     approachToContact_srv = nh->advertiseService("approahToContact", &GraspitInterface::approachToContactCB, this);
     findInitialContact_srv = nh->advertiseService("findInitialContact", &GraspitInterface::findInitialContactCB, this);
 
+    plan_grasps_as = new actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction>(*nh, "planGrasps",
+                                                                                            boost::bind(&GraspitInterface::PlanGraspsCB, this, _1), false);
+    plan_grasps_as->start();
+
+    startPlanner = false;
+    plannerStarted = false;
+    requestRender = false;
+    buildPlannerResponse = false;
+    finishedBuildingResponse = true;
+    mPlanner = NULL;
+    mHandObjectState = NULL;
+
     ROS_INFO("GraspIt interface successfully initialized!");
 
     return 0;
@@ -55,6 +72,26 @@ int GraspitInterface::init(int argc, char** argv)
 
 int GraspitInterface::mainLoop()
 {
+    //Planner Must be started by mainthread, so it cannot be
+    //Started inside the callback for the action server.
+    if(startPlanner)
+    {
+        startPlannerInMainLoop();
+    }
+
+    if(buildPlannerResponse)
+    {
+        buildPlannerResponseInMainLoop();
+    }
+
+    //Rendering must be handled my the main thread
+    //So if one of the action servers wants a render
+    //They set requestRender to true, and it will be rendered here.
+    if(requestRender)
+    {
+        renderInMainLoop();
+    }
+
     ros::spinOnce();
     return 0;
 } 
@@ -502,6 +539,290 @@ bool GraspitInterface::findInitialContactCB(graspit_interface::FindInitialContac
      }
      mHand->findInitialContact(request.moveDist);
      return true;
+}
+
+void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &_goal)
+{
+    goal = *_goal;
+
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+    if(mHand == NULL)
+    {
+        ROS_INFO("Planning Hand is NULL");
+    }
+    GraspableBody *mObject = graspitCore->getWorld()->getGB(0);
+    if(mObject == NULL)
+    {
+        ROS_INFO("Planning Object is NULL");
+    }
+
+    startPlanner = true;
+
+    ROS_INFO("Waiting For Planner to Start");
+    while(!plannerStarted)
+    {
+        sleep(1.0);
+    }
+
+    ROS_INFO("Waiting For Planner to Finish");
+    while(mPlanner->isActive())
+    {
+        sleep(1.0);
+        ROS_INFO("Curret Planner Step: %d", mPlanner->getCurrentStep());
+        ROS_INFO("Curret Num Grasps: %d", mPlanner->getListSize());
+
+        feedback_.current_step = mPlanner->getCurrentStep();
+        feedback_.current_num_grasps = mPlanner->getListSize();
+        plan_grasps_as->publishFeedback(feedback_);
+    }
+
+    buildPlannerResponse = true;
+
+    while(!finishedBuildingResponse)
+    {
+        sleep(1.0);
+    }
+
+    ROS_INFO("Planner Is Finished");
+
+    requestRender = true;
+
+    ROS_INFO("Cleaning Up");
+
+    startPlanner = false;
+    plannerStarted = false;
+
+    plan_grasps_as->setSucceeded(result_);
+
+    ROS_INFO("Action ServerCB Finished");
+}
+
+void GraspitInterface::startPlannerInMainLoop()
+{
+    if(mPlanner != NULL)
+    {
+        delete mPlanner;
+        mPlanner = NULL;
+    }
+
+    if(mHandObjectState != NULL)
+    {
+        delete mHandObjectState;
+        mHandObjectState = NULL;
+    }
+
+    ROS_INFO("Planner Starting in Mainloop");
+    ROS_INFO("Getting Hand");
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+    if(mHand == NULL)
+    {
+        ROS_INFO("Planning Hand is NULL");
+    }
+    GraspableBody *mObject = graspitCore->getWorld()->getGB(0);
+    if(mObject == NULL)
+    {
+        ROS_INFO("Planning Object is NULL");
+    }
+
+    ROS_INFO("Initing mHandObjectState");
+    mHandObjectState = new GraspPlanningState(mHand);
+    mHandObjectState->setObject(mObject);
+
+    switch(goal.search_space.type) {
+        case graspit_interface::SearchSpace::SPACE_COMPLETE :
+            {
+                mHandObjectState->setPositionType(SPACE_COMPLETE);
+                mHandObjectState->setRefTran( mObject->getTran() );
+                break;
+            }
+        case graspit_interface::SearchSpace::SPACE_AXIS_ANGLE :
+            {
+                mHandObjectState->setPositionType(SPACE_AXIS_ANGLE);
+                mHandObjectState->setRefTran( mObject->getTran() );
+                break;
+            }
+        case graspit_interface::SearchSpace::SPACE_ELLIPSOID :
+            {
+                mHandObjectState->setPositionType(SPACE_ELLIPSOID);
+                mHandObjectState->setRefTran( mObject->getTran() );
+                break;
+            }
+        case graspit_interface::SearchSpace::SPACE_APPROACH :
+            {
+                mHandObjectState->setPositionType(SPACE_APPROACH);
+                mHandObjectState->setRefTran( mHand->getTran() );
+                break;
+            }
+        default:
+            {
+                ROS_INFO("Invalid Search Space Type");
+                //return;
+            }
+    }
+
+    ROS_INFO("Initing mHandObjectState");
+    mHandObjectState->reset();
+
+    ROS_INFO("Initing mPlanner");
+
+    switch(goal.planner.type) {
+        case graspit_interface::Planner::SIM_ANN :
+            {
+                mPlanner = new SimAnnPlanner(mHand);
+                break;
+            }
+        case graspit_interface::Planner::MULTI_THREADED :
+            {
+                mPlanner = new GuidedPlanner(mHand);
+                break;
+            }
+        default:
+            {
+                ROS_INFO("Invalid Planner Type");
+                //return;
+            }
+    }
+
+    switch(goal.search_energy.type) {
+        case graspit_interface::SearchEnergy::ENERGY_CONTACT_QUALITY :
+            {
+                mPlanner->setEnergyType(ENERGY_CONTACT_QUALITY);
+                break;
+            }
+        case graspit_interface::SearchEnergy::ENERGY_POTENTIAL_QUALITY :
+            {
+                mPlanner->setEnergyType(ENERGY_POTENTIAL_QUALITY);
+                break;
+            }
+        case graspit_interface::SearchEnergy::ENERGY_CONTACT :
+            {
+                mPlanner->setEnergyType(ENERGY_CONTACT);
+                break;
+            }
+        case graspit_interface::SearchEnergy::ENERGY_AUTOGRASP_QUALITY :
+            {
+                mPlanner->setEnergyType(ENERGY_AUTOGRASP_QUALITY);
+                break;
+            }
+        case graspit_interface::SearchEnergy::ENERGY_GUIDED_AUTOGRASP :
+            {
+                mPlanner->setEnergyType(ENERGY_GUIDED_AUTOGRASP);
+                break;
+            }
+        default:
+            {
+                ROS_INFO("Invalid Search Energy Type");
+                //return;
+            }
+    }
+
+    switch(goal.search_contact.type) {
+        case graspit_interface::SearchContact::CONTACT_PRESET :
+            {
+                mPlanner->setContactType(CONTACT_PRESET);
+                break;
+            }
+        case graspit_interface::SearchContact::CONTACT_LIVE :
+            {
+                mPlanner->setContactType(CONTACT_LIVE);
+                break;
+            }
+        default:
+            {
+                ROS_INFO("Invalid Search Contact Type");
+                //return;
+            }
+    }
+
+    mPlanner->setModelState(mHandObjectState);
+    int max_steps = goal.max_steps;
+    if(max_steps ==0)
+    {
+        max_steps = 70000;
+    }
+    mPlanner->setMaxSteps(max_steps);
+
+    mPlanner->resetPlanner();
+
+    mPlanner->startPlanner();
+    startPlanner = false;
+    plannerStarted = true;
+}
+
+
+void GraspitInterface::buildPlannerResponseInMainLoop()
+{
+    buildPlannerResponse = false;
+    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+    if(mHand == NULL)
+    {
+        ROS_INFO("Planning Hand is NULL");
+    }
+
+    ROS_INFO("Publishing Result");
+    for(int i = 0; i < mPlanner->getListSize(); i++)
+    {
+        ROS_INFO("Loading Grasp");
+        const GraspPlanningState *gps  = mPlanner->getGrasp(i);
+        gps->execute(mHand);
+        mHand->autoGrasp(false,1.0,false);
+
+        ROS_INFO("Building Pose");
+        geometry_msgs::Pose pose;
+        transf t = mHand->getTran();
+        pose.position.x = t.translation().x() / 1000.0;
+        pose.position.y = t.translation().y() / 1000.0;;
+        pose.position.z = t.translation().z() / 1000.0;;
+        pose.orientation.w = t.rotation().w;
+        pose.orientation.x = t.rotation().x;
+        pose.orientation.y = t.rotation().y;
+        pose.orientation.z = t.rotation().z;
+
+        graspit_interface::Grasp g;
+        g.graspable_body_id = goal.graspable_body_id;
+
+        double dof[mHand->getNumDOF()];
+        mHand->getDOFVals(dof);
+        for(int i = 0; i <mHand->getNumDOF(); ++i)
+        {
+            g.dofs.push_back(dof[i]);
+        }
+
+        g.pose = pose;
+        mHand->getGrasp()->update();
+        QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
+        QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");
+
+        graspitCore->getWorld()->findAllContacts();
+        graspitCore->getWorld()->updateGrasps();
+
+        g.epsilon_quality= mEpsQual.evaluate();
+        g.volume_quality = mVolQual.evaluate();
+
+        ROS_INFO("Pushing back grasp");
+        result_.grasps.push_back(g);
+        result_.energies.push_back(gps->getEnergy());
+        result_.search_energy = goal.search_energy;
+    }
+
+    ROS_INFO("Showing Grasp 0");
+    if(mPlanner->getListSize() > 0)
+    {
+        mPlanner->showGrasp(0);
+    }
+
+    finishedBuildingResponse=true;
+}
+
+void GraspitInterface::renderInMainLoop()
+{
+    requestRender = false;
+
+    ROS_INFO("Rendering");
+    if(graspitCore->getIVmgr())
+    {
+        graspitCore->getIVmgr()->getViewer()->render();
+    }
 }
 
 }
