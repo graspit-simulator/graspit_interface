@@ -1,5 +1,5 @@
 # graspit_interface
-ROS interface for GraspIt!
+ROS interface for GraspIt!.  This repo contains a plugin for GraspIt! that exposes many of the commonly used features within GraspIt! as ros services.  This makes it easier for developers to interface with GraspIt! programatically without writing their own GraspIt! plugin. 
 
 Setup:
 ```
