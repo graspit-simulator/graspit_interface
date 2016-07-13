@@ -18,7 +18,6 @@ If you've got your own implementation in another language, let us know and we'll
 
 Dependencies:
 -------------
-- cmake
 - [ros](http://wiki.ros.org/indigo/Installation) (ROS Indigio is our officially supported
 development flavor)
 - [graspit](https://github.com/graspit-simulator/graspit) and
