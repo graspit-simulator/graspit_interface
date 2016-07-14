@@ -57,11 +57,8 @@ int GraspitInterface::init(int argc, char** argv)
                                                                                             boost::bind(&GraspitInterface::PlanGraspsCB, this, _1), false);
     plan_grasps_as->start();
 
-    startPlanner = false;
-    plannerStarted = false;
-    requestRender = false;
-    buildPlannerResponse = false;
-    finishedBuildingResponse = true;
+    firstTimeInMainLoop = true;
+
     mPlanner = NULL;
     mHandObjectState = NULL;
 
@@ -72,24 +69,15 @@ int GraspitInterface::init(int argc, char** argv)
 
 int GraspitInterface::mainLoop()
 {
-    //Planner Must be started by mainthread, so it cannot be
-    //Started inside the callback for the action server.
-    if(startPlanner)
+    if(firstTimeInMainLoop)
     {
-        startPlannerInMainLoop();
-    }
-
-    if(buildPlannerResponse)
-    {
-        buildPlannerResponseInMainLoop();
-    }
-
-    //Rendering must be handled my the main thread
-    //So if one of the action servers wants a render
-    //They set requestRender to true, and it will be rendered here.
-    if(requestRender)
-    {
-        renderInMainLoop();
+        //Planner Must be started by mainthread, so it cannot be
+        //Started inside the callback for the action server.  I need to connect these here
+        //So that when the signal is emitted, the slot function is executed by the correct thread.
+        QObject::connect(this, SIGNAL(emitRunPlannerInMainThread()), this, SLOT(runPlannerInMainThread()), Qt::BlockingQueuedConnection);
+        QObject::connect(this, SIGNAL(emitProcessPlannerResultsInMainThread()), this, SLOT(processPlannerResultsInMainThread()), Qt::BlockingQueuedConnection);
+        firstTimeInMainLoop = false;
+        ROS_INFO("Planner Signal/Slots connected");
     }
 
     ros::spinOnce();
@@ -544,25 +532,8 @@ bool GraspitInterface::findInitialContactCB(graspit_interface::FindInitialContac
 void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &_goal)
 {
     goal = *_goal;
-
-    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
-    if(mHand == NULL)
-    {
-        ROS_INFO("Planning Hand is NULL");
-    }
-    GraspableBody *mObject = graspitCore->getWorld()->getGB(0);
-    if(mObject == NULL)
-    {
-        ROS_INFO("Planning Object is NULL");
-    }
-
-    startPlanner = true;
-
-    ROS_INFO("Waiting For Planner to Start");
-    while(!plannerStarted)
-    {
-        sleep(1.0);
-    }
+    ROS_INFO("About to Call emit runPlannerInMainLoop();");
+    emit emitRunPlannerInMainThread();
 
     ROS_INFO("Waiting For Planner to Finish");
     while(mPlanner->isActive())
@@ -576,29 +547,16 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
         plan_grasps_as->publishFeedback(feedback_);
     }
 
-    buildPlannerResponse = true;
-
-    while(!finishedBuildingResponse)
-    {
-        sleep(1.0);
-    }
-
-    ROS_INFO("Planner Is Finished");
-
-    requestRender = true;
-
-    ROS_INFO("Cleaning Up");
-
-    startPlanner = false;
-    plannerStarted = false;
+    ROS_INFO("About to Call emit emitProcessPlannerResultsInMainThread();");
+    emit emitProcessPlannerResultsInMainThread();
 
     plan_grasps_as->setSucceeded(result_);
-
     ROS_INFO("Action ServerCB Finished");
 }
 
-void GraspitInterface::startPlannerInMainLoop()
+void GraspitInterface::runPlannerInMainThread()
 {
+    ROS_INFO("Inside: runPlannerInMainLoop");
     if(mPlanner != NULL)
     {
         delete mPlanner;
@@ -669,11 +627,13 @@ void GraspitInterface::startPlannerInMainLoop()
         case graspit_interface::Planner::SIM_ANN :
             {
                 mPlanner = new SimAnnPlanner(mHand);
+                ROS_INFO("Using graspit_interface::Planner::SIM_ANN ");
                 break;
             }
         case graspit_interface::Planner::MULTI_THREADED :
             {
                 mPlanner = new GuidedPlanner(mHand);
+                ROS_INFO("Using graspit_interface::Planner::MULTI_THREADED ");
                 break;
             }
         default:
@@ -687,26 +647,31 @@ void GraspitInterface::startPlannerInMainLoop()
         case graspit_interface::SearchEnergy::ENERGY_CONTACT_QUALITY :
             {
                 mPlanner->setEnergyType(ENERGY_CONTACT_QUALITY);
+                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_CONTACT_QUALITY ");
                 break;
             }
         case graspit_interface::SearchEnergy::ENERGY_POTENTIAL_QUALITY :
             {
                 mPlanner->setEnergyType(ENERGY_POTENTIAL_QUALITY);
+                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_POTENTIAL_QUALITY ");
                 break;
             }
         case graspit_interface::SearchEnergy::ENERGY_CONTACT :
             {
                 mPlanner->setEnergyType(ENERGY_CONTACT);
+                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_CONTACT ");
                 break;
             }
         case graspit_interface::SearchEnergy::ENERGY_AUTOGRASP_QUALITY :
             {
                 mPlanner->setEnergyType(ENERGY_AUTOGRASP_QUALITY);
+                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_AUTOGRASP_QUALITY ");
                 break;
             }
         case graspit_interface::SearchEnergy::ENERGY_GUIDED_AUTOGRASP :
             {
                 mPlanner->setEnergyType(ENERGY_GUIDED_AUTOGRASP);
+                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_GUIDED_AUTOGRASP ");
                 break;
             }
         default:
@@ -720,11 +685,13 @@ void GraspitInterface::startPlannerInMainLoop()
         case graspit_interface::SearchContact::CONTACT_PRESET :
             {
                 mPlanner->setContactType(CONTACT_PRESET);
+                ROS_INFO("Using graspit_interface::SearchContact::CONTACT_PRESET ");
                 break;
             }
         case graspit_interface::SearchContact::CONTACT_LIVE :
             {
                 mPlanner->setContactType(CONTACT_LIVE);
+                ROS_INFO("Using graspit_interface::SearchContact::CONTACT_LIVE ");
                 break;
             }
         default:
@@ -734,30 +701,36 @@ void GraspitInterface::startPlannerInMainLoop()
             }
     }
 
+    ROS_INFO("Setting Planner Model State");
     mPlanner->setModelState(mHandObjectState);
     int max_steps = goal.max_steps;
     if(max_steps ==0)
     {
         max_steps = 70000;
     }
+    ROS_INFO("Setting Planner Max Steps %d", max_steps);
     mPlanner->setMaxSteps(max_steps);
 
+    ROS_INFO("resetting Planner");
     mPlanner->resetPlanner();
 
+    ROS_INFO("Starting Planner");
     mPlanner->startPlanner();
-    startPlanner = false;
-    plannerStarted = true;
-}
 
+ }
 
-void GraspitInterface::buildPlannerResponseInMainLoop()
-{
-    buildPlannerResponse = false;
-    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
-    if(mHand == NULL)
-    {
-        ROS_INFO("Planning Hand is NULL");
-    }
+ void GraspitInterface::processPlannerResultsInMainThread()
+ {
+     Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+     if(mHand == NULL)
+     {
+         ROS_INFO("Planning Hand is NULL");
+     }
+     GraspableBody *mObject = graspitCore->getWorld()->getGB(0);
+     if(mObject == NULL)
+     {
+         ROS_INFO("Planning Object is NULL");
+     }
 
     ROS_INFO("Publishing Result");
     for(int i = 0; i < mPlanner->getListSize(); i++)
@@ -809,19 +782,6 @@ void GraspitInterface::buildPlannerResponseInMainLoop()
     if(mPlanner->getListSize() > 0)
     {
         mPlanner->showGrasp(0);
-    }
-
-    finishedBuildingResponse=true;
-}
-
-void GraspitInterface::renderInMainLoop()
-{
-    requestRender = false;
-
-    ROS_INFO("Rendering");
-    if(graspitCore->getIVmgr())
-    {
-        graspitCore->getIVmgr()->getViewer()->render();
     }
 }
 
