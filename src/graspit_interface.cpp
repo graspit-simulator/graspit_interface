@@ -541,6 +541,7 @@ bool GraspitInterface::dynamicAutoGraspCompleteCB(graspit_interface::DynamicAuto
          return true;
      }
      response.GraspComplete = mHand->dynamicAutograspComplete();
+     return true;
 }
 
 void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &_goal)
