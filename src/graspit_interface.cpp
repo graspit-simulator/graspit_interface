@@ -50,7 +50,7 @@ int GraspitInterface::init(int argc, char** argv)
 
     computeQuality_srv = nh->advertiseService("computeQuality", &GraspitInterface::computeQualityCB, this);
 
-    approachToContact_srv = nh->advertiseService("approahToContact", &GraspitInterface::approachToContactCB, this);
+    approachToContact_srv = nh->advertiseService("approachToContact", &GraspitInterface::approachToContactCB, this);
     findInitialContact_srv = nh->advertiseService("findInitialContact", &GraspitInterface::findInitialContactCB, this);
 
     plan_grasps_as = new actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction>(*nh, "planGrasps",
