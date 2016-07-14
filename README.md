@@ -47,17 +47,11 @@ catkin_init_workspace .
 git clone git@github.com:CURG/graspit_interface.git
 git clone git@github.com:CURG/graspit_commander.git
 git clone git@github.com:graspit-simulator/graspit-ros.git
+cd graspit-ros
+git submodule init
+git submodule update
 ```
 *Note: You only need to clone ```graspit_commander``` if you want to use our python client*
-
-**There is currently a bug in graspit that has yet to be pulled into master, for now please
-checkout graspit with the fixed version using the following commands**
-```
-cd graspit-ros/graspit/graspit_source
-git add remote jake git@github.com:jvarley/graspit.git
-git fetch jake
-git checkout jake/refactor_src
-```
 
 ###Building
 From the root of your catkin workspace (above the src directory) run:
