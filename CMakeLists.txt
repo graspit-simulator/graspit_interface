@@ -92,6 +92,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    ComputeQuality.srv
    ApproachToContact.srv
    FindInitialContact.srv
+   DynamicAutoGraspComplete.srv
  )
 
 

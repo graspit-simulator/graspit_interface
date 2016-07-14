@@ -52,6 +52,7 @@ int GraspitInterface::init(int argc, char** argv)
 
     approachToContact_srv = nh->advertiseService("approachToContact", &GraspitInterface::approachToContactCB, this);
     findInitialContact_srv = nh->advertiseService("findInitialContact", &GraspitInterface::findInitialContactCB, this);
+    dynamicAutoGraspComplete_srv= nh->advertiseService("dynamicAutoGraspComplete", &GraspitInterface::dynamicAutoGraspCompleteCB, this);
 
     plan_grasps_as = new actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction>(*nh, "planGrasps",
                                                                                             boost::bind(&GraspitInterface::PlanGraspsCB, this, _1), false);
@@ -483,10 +484,10 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
         return true;
     }
 
-    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+    Hand *mHand =graspitCore->getWorld()->getHand(request.id);
     if (mHand==NULL)
     {
-        response.result = response.RESULT_NO_HAND;
+        response.result = response.RESULT_INVALID_ID;
         return true;
     }
 
@@ -506,27 +507,40 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
 bool GraspitInterface::approachToContactCB(graspit_interface::ApproachToContact::Request &request,
                                            graspit_interface::ApproachToContact::Response &response)
 {
-    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
-     if (mHand==NULL)
-     {
-         response.result = response.RESULT_NO_HAND;
-         return true;
-     }
+    Hand *mHand =graspitCore->getWorld()->getHand(request.id);
+    if (mHand==NULL)
+    {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    }
      mHand->approachToContact(request.moveDist, request.oneStep);
      return true;
 }
 
 bool GraspitInterface::findInitialContactCB(graspit_interface::FindInitialContact::Request &request,
                                             graspit_interface::FindInitialContact::Response &response)
-                  {
-    Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+{
+     Hand *mHand =graspitCore->getWorld()->getHand(request.id);
      if (mHand==NULL)
      {
-         response.result = response.RESULT_NO_HAND;
+         response.result = response.RESULT_INVALID_ID;
          return true;
      }
+
      mHand->findInitialContact(request.moveDist);
      return true;
+}
+
+bool GraspitInterface::dynamicAutoGraspCompleteCB(graspit_interface::DynamicAutoGraspComplete::Request &request,
+                                graspit_interface::DynamicAutoGraspComplete::Response &response)
+{
+     Hand *mHand = graspitCore->getWorld()->getCurrentHand();
+     if (mHand==NULL)
+     {
+         response.result = response.RESULT_INVALID_ID;
+         return true;
+     }
+     response.GraspComplete = mHand->dynamicAutograspComplete();
 }
 
 void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &_goal)
