@@ -151,11 +151,21 @@ catkin_package(
 ## Build ##
 ###########
 
+include(${QT_USE_FILE})
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(include
                     ${catkin_INCLUDE_DIRS}
                     ${QT_INCLUDES})
+
+ADD_DEFINITIONS(${QT_DEFINITIONS})
+
+set(MOCS
+    include/graspit_interface.h)
+
+qt4_wrap_cpp(GENERATED_SOURCES ${MOCS})
 
 ## Declare a C++ library
 # add_library(graspit_interface
@@ -170,11 +180,13 @@ include_directories(include
 ## Declare a C++ executable
 add_library(graspit_interface
     src/graspit_interface.cpp
-    src/main.cpp)
+    src/main.cpp
+    ${GENERATED_SOURCES}
+    ${MOCS})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(graspit_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(graspit_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${QT_DEFINITIONS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(graspit_interface

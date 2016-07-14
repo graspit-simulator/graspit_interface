@@ -47,8 +47,10 @@
 namespace GraspitInterface
 {
 
-class GraspitInterface : public Plugin
+class GraspitInterface : public QObject, public Plugin
 {
+
+    Q_OBJECT
 
 private:
   ros::NodeHandle *nh;
@@ -97,13 +99,8 @@ private:
 
   GraspPlanningState *mHandObjectState;
   SimAnnPlanner *mPlanner;
-  bool startPlanner;
-  bool plannerStarted;
-  bool buildPlannerResponse;
-  bool finishedBuildingResponse;
 
-  bool requestRender;
-
+  bool firstTimeInMainLoop;
 
   // Service callbacks
   bool getRobotCB(graspit_interface::GetRobot::Request &request,
@@ -185,11 +182,6 @@ private:
   //ActionServer callbacks
   void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
 
-  //the planner must be started in the mainloop, not the action server callback
-  void startPlannerInMainLoop();
-  void renderInMainLoop();
-  void buildPlannerResponseInMainLoop();
-
 public: 
   GraspitInterface(){}
   ~GraspitInterface(){}
@@ -197,6 +189,17 @@ public:
   virtual int init(int argc, char **argv);
 
   virtual int mainLoop();
+
+public Q_SLOTS:
+
+    void runPlannerInMainThread();
+    void processPlannerResultsInMainThread();
+
+Q_SIGNALS:
+
+    void emitRunPlannerInMainThread();
+    void emitProcessPlannerResultsInMainThread();
+
 
 };
 
