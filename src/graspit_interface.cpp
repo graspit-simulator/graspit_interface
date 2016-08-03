@@ -39,6 +39,7 @@ int GraspitInterface::init(int argc, char** argv)
     autoOpen_srv = nh->advertiseService("autoOpen", &GraspitInterface::autoOpenCB, this);
 
     forceRobotDOF_srv = nh->advertiseService("forceRobotDof", &GraspitInterface::forceRobotDOFCB, this);
+    moveDOFToContacts_srv = nh->advertiseService("moveDOFToContacts", &GraspitInterface::moveDOFToContactsCB, this);
     setRobotDesiredDOF_srv = nh->advertiseService("setRobotDesiredDOF", &GraspitInterface::setRobotDesiredDOFCB, this);
 
     importRobot_srv = nh->advertiseService("importRobot", &GraspitInterface::importRobotCB, this);
@@ -343,6 +344,21 @@ bool GraspitInterface::forceRobotDOFCB(graspit_interface::ForceRobotDOF::Request
     }
 }
 
+bool GraspitInterface::moveDOFToContactsCB(graspit_interface::MoveDOFToContacts::Request &request,
+                     graspit_interface::MoveDOFToContacts::Response &response)
+{
+    if (graspitCore->getWorld()->getNumRobots() <= request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    } else if (graspitCore->getWorld()->dynamicsAreOn()) {
+        response.result = response.RESULT_DYNAMICS_MODE_ENABLED;
+        return true;
+    } else {
+        graspitCore->getWorld()->getHand(request.id)->moveDOFToContacts(request.dofs.data(), request.desired_steps.data(), request.stopAtContact);
+        response.result = response.RESULT_SUCCESS;
+        return true;
+    }
+}
 
 bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
                                             graspit_interface::SetRobotDesiredDOF::Response &response)
