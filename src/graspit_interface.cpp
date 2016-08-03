@@ -31,10 +31,14 @@ int GraspitInterface::init(int argc, char** argv)
     setRobotPose_srv = nh->advertiseService("setRobotPose", &GraspitInterface::setRobotPoseCB, this);
     setBodyPose_srv = nh->advertiseService("setBodyPose", &GraspitInterface::setBodyPoseCB, this);
     setGraspableBodyPose_srv = nh->advertiseService("setGraspableBodyPose", &GraspitInterface::setGraspableBodyPoseCB, this);
+
     getDynamics_srv = nh->advertiseService("getDynamics", &GraspitInterface::getDynamicsCB, this);
     setDynamics_srv = nh->advertiseService("setDynamics", &GraspitInterface::setDynamicsCB, this);
+
     autoGrasp_srv = nh->advertiseService("autoGrasp", &GraspitInterface::autoGraspCB, this);
     autoOpen_srv = nh->advertiseService("autoOpen", &GraspitInterface::autoOpenCB, this);
+
+    forceRobotDOF_srv = nh->advertiseService("forceRobotDof", &GraspitInterface::forceRobotDOFCB, this);
     setRobotDesiredDOF_srv = nh->advertiseService("setRobotDesiredDOF", &GraspitInterface::setRobotDesiredDOFCB, this);
 
     importRobot_srv = nh->advertiseService("importRobot", &GraspitInterface::importRobotCB, this);
@@ -323,24 +327,40 @@ bool GraspitInterface::autoOpenCB(graspit_interface::AutoOpen::Request &request,
     return true;
 }
 
-bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
-                   graspit_interface::SetRobotDesiredDOF::Response &response)
+bool GraspitInterface::forceRobotDOFCB(graspit_interface::ForceRobotDOF::Request &request,
+                                       graspit_interface::ForceRobotDOF::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
+    } else if (graspitCore->getWorld()->dynamicsAreOn()) {
+        response.result = response.RESULT_DYNAMICS_MODE_ENABLED;
+        return true;
+    } else {
+        graspitCore->getWorld()->getHand(request.id)->forceDOFVals(request.dofs.data());
+        response.result = response.RESULT_SUCCESS;
+        return true;
     }
-    else{
-        if(graspitCore->getWorld()->dynamicsAreOn())
-        {
-            graspitCore->getWorld()->getHand(request.id)->setDesiredDOFVals(request.dofs.data());
+}
+
+
+bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
+                                            graspit_interface::SetRobotDesiredDOF::Response &response)
+{
+    if (graspitCore->getWorld()->getNumRobots() <= request.id) {
+        response.result = response.RESULT_INVALID_ID;
+        return true;
+    } else if (!graspitCore->getWorld()->dynamicsAreOn()) {
+        response.result = response.RESULT_DYNAMICS_MODE_DISABLED;
+        return true;
+    } else {
+        for(int i=0; i < graspitCore->getWorld()->getHand(request.id)->getNumDOF(); i++) {
+            graspitCore->getWorld()->getHand(request.id)->getDOF(i)->setDesiredVelocity(request.dof_velocities.data()[i]);
         }
-        else
-        {
-            graspitCore->getWorld()->getHand(request.id)->forceDOFVals(request.dofs.data());
-        }
+        graspitCore->getWorld()->getHand(request.id)->setDesiredDOFVals(request.dofs.data());
+        response.result = response.RESULT_SUCCESS;
+        return true;
     }
-    return true;
 }
 
 bool GraspitInterface::importRobotCB(graspit_interface::ImportRobot::Request &request,

@@ -79,6 +79,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    GetDynamics.srv
    SetDynamics.srv
    SetRobotDesiredDOF.srv
+   ForceRobotDOF.srv
    AutoGrasp.srv
    AutoOpen.srv
    ImportRobot.srv

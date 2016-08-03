@@ -28,6 +28,7 @@
 #include <graspit_interface/SetRobotPose.h>
 #include <graspit_interface/AutoGrasp.h>
 #include <graspit_interface/AutoOpen.h>
+#include <graspit_interface/ForceRobotDOF.h>
 #include <graspit_interface/SetRobotDesiredDOF.h>
 #include <graspit_interface/ImportRobot.h>
 #include <graspit_interface/ImportGraspableBody.h>
@@ -74,6 +75,7 @@ private:
 
   ros::ServiceServer autoGrasp_srv;
   ros::ServiceServer autoOpen_srv;
+  ros::ServiceServer forceRobotDOF_srv;
   ros::ServiceServer setRobotDesiredDOF_srv;
 
   ros::ServiceServer importRobot_srv;
@@ -145,8 +147,11 @@ private:
   bool autoOpenCB(graspit_interface::AutoOpen::Request &request,
                      graspit_interface::AutoOpen::Response &response);
 
+  bool forceRobotDOFCB(graspit_interface::ForceRobotDOF::Request &request,
+                       graspit_interface::ForceRobotDOF::Response &response);
+
   bool setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
-                     graspit_interface::SetRobotDesiredDOF::Response &response);
+                            graspit_interface::SetRobotDesiredDOF::Response &response);
 
   bool importRobotCB(graspit_interface::ImportRobot::Request &request,
                          graspit_interface::ImportRobot::Response &response);
@@ -171,7 +176,6 @@ private:
 
   bool toggleAllCollisionsCB(graspit_interface::ToggleAllCollisions::Request &request,
                      graspit_interface::ToggleAllCollisions::Response &response);
-
 
   bool computeQualityCB(graspit_interface::ComputeQuality::Request &request,
                          graspit_interface::ComputeQuality::Response &response);

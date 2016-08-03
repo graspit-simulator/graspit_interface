@@ -1,9 +1,11 @@
 uint32 id
 float64[] dofs
+float64[] dof_velocities
 ---
-uint8 RESULT_SUCCESS            = 0
-uint8 RESULT_INVALID_ID         = 1
-uint8 RESULT_DOF_OUT_OF_RANGE   = 2
-uint8 RESULT_DOF_COUNT_MISMATCH = 3
+uint8 RESULT_SUCCESS                = 0
+uint8 RESULT_INVALID_ID             = 1
+uint8 RESULT_DOF_OUT_OF_RANGE       = 2
+uint8 RESULT_DOF_COUNT_MISMATCH     = 3
+uint8 RESULT_DYNAMICS_MODE_DISABLED = 4
 
 uint8 result
