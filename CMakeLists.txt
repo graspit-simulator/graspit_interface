@@ -57,10 +57,14 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    Robot.msg
    Grasp.msg
    Planner.msg
+   PlannerResult.msg
    SearchEnergy.msg
    SearchSpace.msg
    SearchContact.msg
    Energy.msg
+   TableGraspPose.msg
+   TableGraspPoseArray.msg
+   PregraspParams.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -95,6 +99,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    ApproachToContact.srv
    FindInitialContact.srv
    DynamicAutoGraspComplete.srv
+   FindTableGrasps.srv
  )
 
 

@@ -1,0 +1,24 @@
+# Request:
+Grasp[] grasps
+string robot_name
+PregraspParams pregrasp
+string body_name
+
+uint8 num_poses
+---
+# Result:
+
+#2D array-- indices (in grasps) of good grasps for each body pose:
+#GraspIndices[] grasp_ids 
+
+#Hand poses from input grasps, transformed to match each new body pose.
+# Each Pose paired with a bool indicating validity of the pose:
+TableGraspPoseArray[] hand_poses
+geometry_msgs/Pose[] body_poses
+geometry_msgs/Pose[] table_poses
+
+uint8 RESULT_SUCCESS    = 0
+uint8 RESULT_FAILURE    = 1
+
+uint8 result
+
