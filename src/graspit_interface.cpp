@@ -608,23 +608,13 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
 
     plan_grasps_as->setSucceeded(result_);
     ROS_INFO("Action ServerCB Finished");
+
+
+
 }
 
 void GraspitInterface::runPlannerInMainThread()
 {
-    ROS_INFO("Inside: runPlannerInMainLoop");
-    if(mPlanner != NULL)
-    {
-        delete mPlanner;
-        mPlanner = NULL;
-    }
-
-    if(mHandObjectState != NULL)
-    {
-        delete mHandObjectState;
-        mHandObjectState = NULL;
-    }
-
     ROS_INFO("Planner Starting in Mainloop");
     ROS_INFO("Getting Hand");
     Hand *mHand = graspitCore->getWorld()->getCurrentHand();
@@ -838,6 +828,19 @@ void GraspitInterface::runPlannerInMainThread()
     if(mPlanner->getListSize() > 0)
     {
         mPlanner->showGrasp(0);
+    }
+
+    ROS_INFO("Cleaning up mPlanner and mHandObjectState");
+    if(mHandObjectState != NULL)
+    {
+        delete mHandObjectState;
+        mHandObjectState = NULL;
+    }
+
+    if(mPlanner != NULL)
+    {
+        delete mPlanner;
+        mPlanner = NULL;
     }
 }
 
