@@ -775,6 +775,9 @@ void GraspitInterface::runPlannerInMainThread()
          ROS_INFO("Planning Object is NULL");
      }
 
+    result_.grasps.clear();
+    result_.energies.clear();
+
     ROS_INFO("Publishing Result");
     for(int i = 0; i < mPlanner->getListSize(); i++)
     {
