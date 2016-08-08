@@ -460,10 +460,15 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
         QString(".xml");
 
     ROS_INFO("Loading %s",filename.toStdString().c_str());
+    //First try to load from Graspit Directory
     Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),filename);
     if(b == NULL){
-        response.result = response.RESULT_FAILURE;
-        return true;
+        //Now try to load using unaltered filepath from request.
+        Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),QString(request.filename.data()));
+        if(b == NULL){
+            response.result = response.RESULT_FAILURE;
+            return true;
+        }
     }
 
     // Identifier for this body.
@@ -643,19 +648,6 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
 
 void GraspitInterface::runPlannerInMainThread()
 {
-    ROS_INFO("Inside: runPlannerInMainLoop");
-    if(mPlanner != NULL)
-    {
-        delete mPlanner;
-        mPlanner = NULL;
-    }
-
-    if(mHandObjectState != NULL)
-    {
-        delete mHandObjectState;
-        mHandObjectState = NULL;
-    }
-
     ROS_INFO("Planner Starting in Mainloop");
     ROS_INFO("Getting Hand");
     Hand *mHand = graspitCore->getWorld()->getCurrentHand();
@@ -869,6 +861,19 @@ void GraspitInterface::runPlannerInMainThread()
     if(mPlanner->getListSize() > 0)
     {
         mPlanner->showGrasp(0);
+    }
+
+    ROS_INFO("Cleaning up mPlanner and mHandObjectState");
+    if(mHandObjectState != NULL)
+    {
+        delete mHandObjectState;
+        mHandObjectState = NULL;
+    }
+
+    if(mPlanner != NULL)
+    {
+        delete mPlanner;
+        mPlanner = NULL;
     }
 }
 
