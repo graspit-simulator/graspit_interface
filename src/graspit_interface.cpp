@@ -426,10 +426,15 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
             QString(".xml");
 
     ROS_INFO("Loading %s",filename.toStdString().c_str());
+    //First try to load from Graspit Directory
     Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),filename);
     if(b == NULL){
-        response.result = response.RESULT_FAILURE;
-        return true;
+        //Now try to load using unaltered filepath from request.
+        Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),QString(request.filename.data()));
+        if(b == NULL){
+            response.result = response.RESULT_FAILURE;
+            return true;
+        }
     }
     return true;
 }
