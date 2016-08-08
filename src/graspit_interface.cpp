@@ -608,9 +608,6 @@ void GraspitInterface::PlanGraspsCB(const graspit_interface::PlanGraspsGoalConst
 
     plan_grasps_as->setSucceeded(result_);
     ROS_INFO("Action ServerCB Finished");
-
-
-
 }
 
 void GraspitInterface::runPlannerInMainThread()
