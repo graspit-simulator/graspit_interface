@@ -62,8 +62,6 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    SearchSpace.msg
    SearchContact.msg
    Energy.msg
-   TableGraspPose.msg
-   TableGraspPoseArray.msg
    PregraspParams.msg
    Contact.msg
  )
@@ -100,7 +98,6 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    ApproachToContact.srv
    FindInitialContact.srv
    DynamicAutoGraspComplete.srv
-   FindTableGrasps.srv
  )
 
 

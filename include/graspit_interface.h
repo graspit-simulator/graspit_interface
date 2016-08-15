@@ -46,7 +46,6 @@
 #include <graspit_interface/ApproachToContact.h>
 #include <graspit_interface/FindInitialContact.h>
 #include <graspit_interface/DynamicAutoGraspComplete.h>
-#include <graspit_interface/FindTableGrasps.h>
 
 
 // ActionServer includes
@@ -102,8 +101,6 @@ private:
   ros::ServiceServer findInitialContact_srv;
 
   ros::ServiceServer dynamicAutoGraspComplete_srv;
-
-  ros::ServiceServer findTableGrasps_srv;
 
   // ActionServer declarations
   actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction> *plan_grasps_as;
@@ -201,12 +198,6 @@ private:
   bool dynamicAutoGraspCompleteCB(graspit_interface::DynamicAutoGraspComplete::Request &request,
                                   graspit_interface::DynamicAutoGraspComplete::Response &response);
 
-  // Given grasps for an object, places the object in a bunch of random poses
-  //   on a table, and finds the valid grasps for each pose:
-  bool findTableGraspsCB(graspit_interface::FindTableGrasps::Request &request,
-          graspit_interface::FindTableGrasps::Response &response);
-  // fn used by ^^^.  Checks if pregrasp results in collision:
-  bool preGraspCheck(Hand *hand, Body *object, std::vector<double> open_dofs_by, double retreat_dist);
   // Convenience functions for converting between pose types:
     inline geometry_msgs::Pose transfToRosMsg(transf pose) {
         geometry_msgs::Pose ret;
