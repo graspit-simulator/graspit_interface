@@ -65,6 +65,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    TableGraspPose.msg
    TableGraspPoseArray.msg
    PregraspParams.msg
+   Contact.msg
  )
 
 ## Generate services in the 'srv' folder

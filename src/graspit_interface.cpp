@@ -101,20 +101,27 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
         return true;
     } else {
         Robot *r = graspitCore->getWorld()->getRobot(request.id);
-        transf t = r->getTran();
 
-        geometry_msgs::Pose pose = geometry_msgs::Pose();
+        response.robot.pose = transfToRosMsg(r->getTran());
+        response.robot.approach_direction = transfToRosMsg(r->getApproachTran());
 
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
+        // Info for all contacts with this robot:
+        std::list<Contact*> contacts = r->getContacts();
+        for (std::list<Contact*>::iterator it = contacts.begin();
+                it != contacts.end(); it++) {
+            graspit_interface::Contact c;
+            c.body1 = (*it)->getBody1()->getName().toStdString();
+            c.body2 = (*it)->getBody2()->getName().toStdString();
+            
+            position p = (*it)->getPosition();
+            c.position.x = p.x() * 0.001; 
+            c.position.y = p.y() * 0.001; 
+            c.position.z = p.z() * 0.001; 
+            c.cof = (*it)->getCof();
+            response.robot.contacts.push_back(c);
+        }
 
-        response.robot.pose = pose;
-
+        // Joint state and DOF information:
         for (int i=0; i < r->getNumJoints(); i++) {
             sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
             response.robot.joints.push_back(robot_joint_state);
@@ -137,19 +144,9 @@ bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::R
         return true;
     } else {
         GraspableBody *b = graspitCore->getWorld()->getGB(request.id);
-        transf t = b->getTran();
 
-        geometry_msgs::Pose pose = geometry_msgs::Pose();
+        response.graspable_body.pose = transfToRosMsg(b->getTran());
 
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
-
-        response.graspable_body.pose = pose;
         response.graspable_body.element_name = b->getName().toStdString();
         return true;
     }
@@ -164,22 +161,56 @@ bool GraspitInterface::getBodyCB(graspit_interface::GetBody::Request &request,
         return true;
     } else {
         Body *b = graspitCore->getWorld()->getBody(request.id);
-        transf t = b->getTran();
-
-        geometry_msgs::Pose pose = geometry_msgs::Pose();
-
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
-
-        response.body.pose = pose;
+        // Get Body properties:
+        response.body.pose = transfToRosMsg(b->getTran());
         response.body.element_name = b->getName().toStdString(); 
+        response.body.material = b->getMaterial();
+        response.body.transparency = b->getTransparency();
+        response.body.youngs_modulus = b->getYoungs();
+        response.body.is_dynamic = b->isDynamic();
+        // Dynamic body properties, if applicable:
+        if (b->isDynamic()) {
+            DynamicBody * db = (DynamicBody*) b;
+            response.body.max_radius = db->getMaxRadius();
 
-        return true;
+            // ROS inertia msg includes mass, center mass, & inertia tensor:
+            geometry_msgs::Inertia inert;
+            // ros mass = kgs.  graspit mass = grams:
+            inert.m = db->getMass() * 0.001; 
+            position cog = db->getCoG();
+            inert.com.x = cog.x(); inert.com.y = cog.y(); inert.com.z = cog.z(); 
+            const double * in = db->getInertia();
+            // TODO not sure if these line up right:
+            inert.ixx = in[0]; inert.ixy = in[1]; inert.ixz = in[2];
+            inert.iyy = in[4]; inert.iyz = in[5]; inert.izz = in[8];
+            response.body.inertia = inert;
+
+            // ROS accel msg:
+            geometry_msgs::Accel accel; 
+            geometry_msgs::Vector3 lin;
+            geometry_msgs::Vector3 ang;
+            const double * ac = db->getAccel();
+            // TODO not sure if these line up right:
+            lin.x = ac[0]; lin.y = ac[1]; lin.z = ac[2]; 
+            ang.x = ac[3]; ang.y = ac[4]; ang.z = ac[5]; 
+            accel.linear = lin; accel.angular = ang;
+            response.body.accel = accel;
+
+            // ROS vel msg:
+            geometry_msgs::Twist vel; 
+            const double * v = db->getVelocity();
+            // TODO not sure if these line up right:
+            lin.x = v[0]; lin.y = v[1]; lin.z = v[2]; 
+            ang.x = v[3]; ang.y = v[4]; ang.z = v[5]; 
+            vel.linear = lin; vel.angular = ang;
+            response.body.velocity = vel;
+        }
+        else {
+            response.body.inertia = geometry_msgs::Inertia();
+            response.body.accel = geometry_msgs::Accel();
+            response.body.velocity = geometry_msgs::Twist();
+            response.body.max_radius = -1;
+        }
     }
     return true;
 }
@@ -223,16 +254,7 @@ bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
-        vec3 newTranslation(request.pose.position.x * 1000.0,
-                request.pose.position.y * 1000.0,
-                request.pose.position.z * 1000.0);
-
-        Quaternion newRotation(request.pose.orientation.w,
-                request.pose.orientation.x,
-                request.pose.orientation.y,
-                request.pose.orientation.z);
-
-        transf newTransform(newRotation, newTranslation);
+        transf newTransform = rosMsgToTransf(request.pose);
 
         graspitCore->getWorld()->getRobot(request.id)->setTran(newTransform);
         return true;
@@ -246,17 +268,7 @@ bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBod
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
-
-        vec3 newTranslation(request.pose.position.x * 1000.0,
-                request.pose.position.y * 1000.0,
-                request.pose.position.z * 1000.0);
-
-        Quaternion newRotation(request.pose.orientation.w,
-                request.pose.orientation.x,
-                request.pose.orientation.y,
-                request.pose.orientation.z);
-
-        transf newTransform(newRotation, newTranslation);
+        transf newTransform = rosMsgToTransf(request.pose);
 
         graspitCore->getWorld()->getGB(request.id)->setTran(newTransform);
         return true;
@@ -270,17 +282,7 @@ bool GraspitInterface::setBodyPoseCB(graspit_interface::SetBodyPose::Request &re
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
-
-        vec3 newTranslation(request.pose.position.x * 1000.0,
-                request.pose.position.y * 1000.0,
-                request.pose.position.z * 1000.0);
-
-        Quaternion newRotation(request.pose.orientation.w,
-                request.pose.orientation.x,
-                request.pose.orientation.y,
-                request.pose.orientation.z);
-
-        transf newTransform(newRotation, newTranslation);
+        transf newTransform = rosMsgToTransf(request.pose);
 
         graspitCore->getWorld()->getBody(request.id)->setTran(newTransform);
         return true;
@@ -820,17 +822,10 @@ void GraspitInterface::runPlannerInMainThread()
         mHand->autoGrasp(false,1.0,false);
 
         ROS_INFO("Building Pose");
-        geometry_msgs::Pose pose;
-        transf t = mHand->getTran();
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
 
         graspit_interface::Grasp g;
+        g.pose = transfToRosMsg(mHand->getTran());
+
         g.graspable_body_id = goal.graspable_body_id;
 
         double dof[mHand->getNumDOF()];
@@ -840,7 +835,6 @@ void GraspitInterface::runPlannerInMainThread()
             g.dofs.push_back(dof[i]);
         }
 
-        g.pose = pose;
         mHand->getGrasp()->update();
         QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
         QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");
@@ -978,22 +972,13 @@ bool GraspitInterface::findTableGraspsCB(graspit_interface::FindTableGrasps::Req
         int num_good_grasps = 0;
         for (int j=0; j<request.grasps.size(); j++) {
             // place the hand in position
-            vec3 handT(request.grasps[j].pose.position.x * 1000.0,
-                    request.grasps[j].pose.position.y * 1000.0,
-                    request.grasps[j].pose.position.z * 1000.0);
-
-            Quaternion handR(request.grasps[j].pose.orientation.w,
-                    request.grasps[j].pose.orientation.x,
-                    request.grasps[j].pose.orientation.y,
-                    request.grasps[j].pose.orientation.z);
-
-            transf handTransform(handR, handT);
+            transf handTransform = rosMsgToTransf(request.grasps[j].pose);
             // Transform hand position from world frame to body frame:
             handTransform =  handTransform * bodyTransform;
             // four days of debugging because I forgot to add this line:
             hand->setTran(handTransform); 
             graspit_interface::TableGraspPose tgp;
-            tgp.pose = graspitPoseToRosPose(handTransform);
+            tgp.pose = transfToRosMsg(handTransform);
 
             // Check for collision:
             //Grasp valid IFF grasp AND pregrasp don't put hand in collision with table:
@@ -1028,9 +1013,9 @@ bool GraspitInterface::findTableGraspsCB(graspit_interface::FindTableGrasps::Req
         ROS_INFO("\tFound %d valid grasps!", num_good_grasps );
         num_good_grasps=0;
         response.hand_poses.push_back(transformed_hand_poses);
-        geometry_msgs::Pose body_pose = graspitPoseToRosPose(body->getTran());
+        geometry_msgs::Pose body_pose = transfToRosMsg(body->getTran());
         response.body_poses.push_back(body_pose);
-        geometry_msgs::Pose table_pose = graspitPoseToRosPose(table->getTran());
+        geometry_msgs::Pose table_pose = transfToRosMsg(table->getTran());
         response.table_poses.push_back(table_pose);
     }
     ROS_INFO("Finished checking grasps for all body poses!");
