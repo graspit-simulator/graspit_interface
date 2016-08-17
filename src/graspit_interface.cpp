@@ -349,13 +349,18 @@ bool GraspitInterface::forceRobotDOFCB(graspit_interface::ForceRobotDOF::Request
         Hand *hand = graspitCore->getWorld()->getHand(request.id);
         double * dof = request.dofs.data();
         for (int d=0; d<hand->getNumDOF(); d++) {
-            if (dof[d] < hand->getDOF(d)->getMin() || 
-                    dof[d] > hand->getDOF(d)->getMax()) {
-                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at max/min.",
+            if (dof[d] < hand->getDOF(d)->getMin()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at min.",
                         dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMin();
+            }  
+            else if (dof[d] > hand->getDOF(d)->getMax()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at max.",
+                        dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMax();
             }
         }
-        hand->forceDOFVals(request.dofs.data());
+        hand->forceDOFVals(dof);
         response.result = response.RESULT_SUCCESS;
         return true;
     }
@@ -395,10 +400,15 @@ bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDO
         //  If outside valid range, cap at min/max.
         double * dof = request.dofs.data();
         for (int d=0; d<hand->getNumDOF(); d++) {
-            if (dof[d] < hand->getDOF(d)->getMin() || 
-                    dof[d] > hand->getDOF(d)->getMax()) {
-                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at max/min.",
+            if (dof[d] < hand->getDOF(d)->getMin()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at min.",
                         dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMin();
+            }  
+            else if (dof[d] > hand->getDOF(d)->getMax()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at max.",
+                        dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMax();
             }
         }
 
