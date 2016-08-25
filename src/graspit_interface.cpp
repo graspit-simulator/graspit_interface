@@ -12,6 +12,8 @@
 #include "graspit_source/include/EGPlanner/simAnnPlanner.h"
 #include "graspit_source/include/EGPlanner/guidedPlanner.h"
 
+#include "cmdline/cmdline.h"
+
 
 namespace GraspitInterface
 {
@@ -20,7 +22,23 @@ int GraspitInterface::init(int argc, char** argv)
 {
     ros::init(argc, argv, "graspit_interface_node");
 
-    nh = new ros::NodeHandle("");
+
+    const std::string node_name_help =
+            "print Ros Node name\n";
+
+    cmdline::parser* parser = new cmdline::parser();
+
+    parser->add<std::string>("node_name", 'n', node_name_help,  false);
+    parser->parse(argc, argv);
+
+    std::string node_name = "";
+
+    if(parser->exist("node_name")){
+        node_name = parser->get<std::string>("node_name");
+    }
+
+
+    nh = new ros::NodeHandle(node_name);
 
     getRobot_srv = nh->advertiseService("getRobot", &GraspitInterface::getRobotCB, this);
     getGraspableBody_srv = nh->advertiseService("getGraspableBody", &GraspitInterface::getGraspableBodyCB, this);

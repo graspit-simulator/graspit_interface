@@ -10,4 +10,4 @@ fi
 
 export GRASPIT_PLUGIN_DIR=$(dirname $(catkin_find libgraspit_interface.so))
 
-rosrun graspit graspit_simulator -p libgraspit_interface
+rosrun graspit graspit_simulator -p libgraspit_interface --node_name graspit
