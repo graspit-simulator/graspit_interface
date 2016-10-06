@@ -11,14 +11,6 @@ If you have any specific features you'd like to see, let us know by submitting a
 To see how a client interacts with this interface, check out our python
 [graspit_commander](https://github.com/CURG/graspit_commander).
 
-If you've got your own implementation in another language, let us know and we'll link to it here!
-
-Dependencies:
--------------
-- [ros](http://wiki.ros.org/indigo/Installation) (tested on ROS Indigio)
-- [graspit](https://github.com/graspit-simulator/graspit) and
-[graspit-ros](https://github.com/graspit-simulator/graspit-ros)
-(*Note: Check out how we set this up [here](#graspit)*
 
 Setup:
 ------
