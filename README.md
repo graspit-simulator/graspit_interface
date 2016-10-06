@@ -15,8 +15,7 @@ If you've got your own implementation in another language, let us know and we'll
 
 Dependencies:
 -------------
-- [ros](http://wiki.ros.org/indigo/Installation) (ROS Indigio is our officially supported
-development flavor)
+- [ros](http://wiki.ros.org/indigo/Installation) (tested on ROS Indigio)
 - [graspit](https://github.com/graspit-simulator/graspit) and
 [graspit-ros](https://github.com/graspit-simulator/graspit-ros)
 (*Note: Check out how we set this up [here](#graspit)*
