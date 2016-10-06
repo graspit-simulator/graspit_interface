@@ -26,20 +26,20 @@ development flavor)
 
 Setup:
 ------
-
-###Your workspace:
-
 ```
+//create ros workspace
 mkdir -p graspit_ros_ws/src
 cd graspit_ros_ws/src
 
 source /opt/ros/indigo/setup.bash
 catkin_init_workspace . 
 
+//clone packages
 git clone git@github.com:CURG/graspit_interface.git
 git clone git@github.com:CURG/graspit_commander.git
 git clone git@github.com:graspit-simulator/graspit-ros.git --recursive
 
+//build workspace
 cd graspit_ros_ws
 catkin_make
 ```
