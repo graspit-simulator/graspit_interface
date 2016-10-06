@@ -26,13 +26,8 @@ development flavor)
 
 Setup:
 ------
-###ROS:
-If you don't already have ROS set up, follow the tutorial [here](http://wiki.ros.org/indigo/Installation).
 
 ###Your workspace:
-We like to keep everything set up within a single ROS (catkin) workspace to keep things simple.
-If you're new to ROS or GraspIt!, it may be useful to set up your workspace in the same way so
-you can follow our tutorials more easily. 
 
 ```
 mkdir -p graspit_ros_ws/src
@@ -40,26 +35,14 @@ cd graspit_ros_ws/src
 
 source /opt/ros/indigo/setup.bash
 catkin_init_workspace . 
-```
 
-###GraspIt!:
-```
 git clone git@github.com:CURG/graspit_interface.git
 git clone git@github.com:CURG/graspit_commander.git
-git clone git@github.com:graspit-simulator/graspit-ros.git
-cd graspit-ros
-git submodule init
-git submodule update
-```
-*Note: You only need to clone ```graspit_commander``` if you want to use our python client*
+git clone git@github.com:graspit-simulator/graspit-ros.git --recursive
 
-###Building
-From the root of your catkin workspace (above the src directory) run:
-```
+cd graspit_ros_ws
 catkin_make
 ```
-*Note: you will need to `source /opt/ros/indigo/setup.bash` if you haven't already
-before running catkin_make* 
 
 
 Run the interface!:
