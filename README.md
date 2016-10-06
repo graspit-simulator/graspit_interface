@@ -6,10 +6,7 @@ this plugin was to give GraspIt! more exposure to the ROS community and make it 
 get started planning grasps with GraspIt! You can interact with this interface through a
 variety of ROS services and action servers.
 
-This repo is currently in **active development**, and we plan on exposing a majority of GraspIt!'s
-functionality to ROS, including all of GraspIt!'s planning capabilities. If you have any specific
-features you'd like us to work on, let us know by submitting a new issue. If you feel comfortable
-with GraspIt! and would like to help us get this done quicker, feel free to submit a pull request!
+If you have any specific features you'd like to see, let us know by submitting a new issue, or feel free to submit a pull request!
 
 To see how a client interacts with this interface, check out our python
 [graspit_commander](https://github.com/CURG/graspit_commander).
