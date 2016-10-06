@@ -33,7 +33,7 @@ catkin_make
 ```
 
 
-Run the interface!:
+Launching graspit_interface:
 -------
 ```
 source devel/setup.bash
