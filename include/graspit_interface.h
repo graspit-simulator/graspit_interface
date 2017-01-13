@@ -2,8 +2,10 @@
 #define _GRASPIT_INTERFACE_H_ 
 
 //ROS includes
+#ifndef Q_MOC_RUN
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
+#endif
 
 //GraspIt! includes
 #include <graspit_source/include/plugin.h>
