@@ -8,7 +8,7 @@ variety of ROS services and action servers.
 
 If you have any specific features you'd like to see, let us know by submitting a new issue, or feel free to submit a pull request!
 
-To see how a client interacts with this interface, check out our python
+To see how a client interacts with this interface, check out our python client
 [graspit_commander](https://github.com/CURG/graspit_commander).
 
 
