@@ -39,3 +39,9 @@ Launching graspit_interface:
 source devel/setup.bash
 roslaunch graspit_interface graspit_interface.launch
 ```
+
+Then you can view available services and topics provided by the graspit_interface via:
+```
+rostopic list
+rosservice list
+```
