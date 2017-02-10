@@ -23,9 +23,9 @@ source /opt/ros/indigo/setup.bash
 catkin_init_workspace . 
 
 //clone packages
-git clone git@github.com:graspit-simulator/graspit-ros.git --recursive
-git clone git@github.com:CURG/graspit_interface.git
-git clone git@github.com:CURG/graspit_commander.git
+git clone https://github.com/graspit-simulator/graspit-ros.git --recursive
+git clone https://github.com/CURG/graspit_interface.git
+git clone https://github.com/CURG/graspit_commander.git
 
 //build workspace
 cd graspit_ros_ws
