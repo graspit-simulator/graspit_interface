@@ -57,7 +57,6 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    Robot.msg
    Grasp.msg
    Planner.msg
-   SearchEnergy.msg
    SearchSpace.msg
    SearchContact.msg
    Energy.msg

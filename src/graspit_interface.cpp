@@ -123,10 +123,10 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
         pose.position.x = t.translation().x() / 1000.0;
         pose.position.y = t.translation().y() / 1000.0;;
         pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
+        pose.orientation.w = t.rotation().w();
+        pose.orientation.x = t.rotation().x();
+        pose.orientation.y = t.rotation().y();
+        pose.orientation.z = t.rotation().z();
 
         response.robot.pose = pose;
 
@@ -159,10 +159,10 @@ bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::R
         pose.position.x = t.translation().x() / 1000.0;
         pose.position.y = t.translation().y() / 1000.0;;
         pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
+        pose.orientation.w = t.rotation().w();
+        pose.orientation.x = t.rotation().x();
+        pose.orientation.y = t.rotation().y();
+        pose.orientation.z = t.rotation().z();
 
         response.graspable_body.pose = pose;
         return true;
@@ -185,10 +185,10 @@ bool GraspitInterface::getBodyCB(graspit_interface::GetBody::Request &request,
         pose.position.x = t.translation().x() / 1000.0;
         pose.position.y = t.translation().y() / 1000.0;;
         pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
+        pose.orientation.w = t.rotation().w();
+        pose.orientation.x = t.rotation().x();
+        pose.orientation.y = t.rotation().y();
+        pose.orientation.z = t.rotation().z();
 
         response.body.pose = pose;
 
@@ -704,43 +704,9 @@ void GraspitInterface::runPlannerInMainThread()
             }
     }
 
-    switch(goal.search_energy.type) {
-        case graspit_interface::SearchEnergy::ENERGY_CONTACT_QUALITY :
-            {
-                mPlanner->setEnergyType(ENERGY_CONTACT_QUALITY);
-                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_CONTACT_QUALITY ");
-                break;
-            }
-        case graspit_interface::SearchEnergy::ENERGY_POTENTIAL_QUALITY :
-            {
-                mPlanner->setEnergyType(ENERGY_POTENTIAL_QUALITY);
-                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_POTENTIAL_QUALITY ");
-                break;
-            }
-        case graspit_interface::SearchEnergy::ENERGY_CONTACT :
-            {
-                mPlanner->setEnergyType(ENERGY_CONTACT);
-                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_CONTACT ");
-                break;
-            }
-        case graspit_interface::SearchEnergy::ENERGY_AUTOGRASP_QUALITY :
-            {
-                mPlanner->setEnergyType(ENERGY_AUTOGRASP_QUALITY);
-                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_AUTOGRASP_QUALITY ");
-                break;
-            }
-        case graspit_interface::SearchEnergy::ENERGY_GUIDED_AUTOGRASP :
-            {
-                mPlanner->setEnergyType(ENERGY_GUIDED_AUTOGRASP);
-                ROS_INFO("Using graspit_interface::SearchEnergy::ENERGY_GUIDED_AUTOGRASP ");
-                break;
-            }
-        default:
-            {
-                ROS_INFO("Invalid Search Energy Type");
-                //return;
-            }
-    }
+
+    mPlanner->setEnergyType(goal.search_energy);
+
 
     switch(goal.search_contact.type) {
         case graspit_interface::SearchContact::CONTACT_PRESET :
@@ -810,10 +776,10 @@ void GraspitInterface::runPlannerInMainThread()
         pose.position.x = t.translation().x() / 1000.0;
         pose.position.y = t.translation().y() / 1000.0;;
         pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
+        pose.orientation.w = t.rotation().w();
+        pose.orientation.x = t.rotation().x();
+        pose.orientation.y = t.rotation().y();
+        pose.orientation.z = t.rotation().z();
 
         graspit_interface::Grasp g;
         g.graspable_body_id = goal.graspable_body_id;
