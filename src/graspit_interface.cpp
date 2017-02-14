@@ -104,7 +104,12 @@ int GraspitInterface::mainLoop()
         ROS_INFO("Planner Signal/Slots connected");
     }
 
-    ros::spinOnce();
+    if (ros::ok()){
+      ros::spinOnce();
+    }
+    else{
+        graspitCore->exitMainLoop();
+    }
     return 0;
 } 
 
