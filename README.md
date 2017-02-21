@@ -25,8 +25,8 @@ catkin_init_workspace .
 
 //clone packages
 git clone https://github.com/graspit-simulator/graspit-ros.git --recursive
-git clone https://github.com/CURG/graspit_interface.git
-git clone https://github.com/CURG/graspit_commander.git
+git clone https://github.com/graspit-simulator/graspit_interface.git
+git clone https://github.com/graspit-simulator/graspit_commander.git
 
 //build workspace
 cd graspit_ros_ws
