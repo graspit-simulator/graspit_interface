@@ -1,8 +1,7 @@
 graspit_interface
 =================
 
-This plugin exposes a ROS interface for the GraspIt! simulator. Our main purpose for writing
-this plugin was to give GraspIt! more exposure to the ROS community and make it easier to
+This plugin exposes a ROS interface for the GraspIt! simulator via [graspit-ros](https://github.com/graspit-simulator/graspit-ros). Our main purpose for writing this plugin was to give GraspIt! more exposure to the ROS community and make it easier to
 get started planning grasps with GraspIt! You can interact with this interface through a
 variety of ROS services and action servers. 
 
@@ -11,7 +10,7 @@ If you have any specific features you'd like to see, let us know by submitting a
 Or please feel free to use this as a template to write your own bridge between your ros system and GraspIt!.
 
 To see how a client interacts with this interface, check out our python client
-[graspit_commander](https://github.com/CURG/graspit_commander).
+[graspit_commander](https://github.com/graspit-simulator/graspit_commander).
 
 
 Setup:
