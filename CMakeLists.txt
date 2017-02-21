@@ -57,10 +57,13 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    Robot.msg
    Grasp.msg
    Planner.msg
+   PlannerResult.msg
    SearchEnergy.msg
    SearchSpace.msg
    SearchContact.msg
    Energy.msg
+   PregraspParams.msg
+   Contact.msg
  )
 
 ## Generate services in the 'srv' folder

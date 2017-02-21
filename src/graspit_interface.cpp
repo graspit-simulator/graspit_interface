@@ -56,7 +56,7 @@ int GraspitInterface::init(int argc, char** argv)
     autoGrasp_srv = nh->advertiseService("autoGrasp", &GraspitInterface::autoGraspCB, this);
     autoOpen_srv = nh->advertiseService("autoOpen", &GraspitInterface::autoOpenCB, this);
 
-    forceRobotDOF_srv = nh->advertiseService("forceRobotDof", &GraspitInterface::forceRobotDOFCB, this);
+    forceRobotDOF_srv = nh->advertiseService("forceRobotDOF", &GraspitInterface::forceRobotDOFCB, this);
     moveDOFToContacts_srv = nh->advertiseService("moveDOFToContacts", &GraspitInterface::moveDOFToContactsCB, this);
     setRobotDesiredDOF_srv = nh->advertiseService("setRobotDesiredDOF", &GraspitInterface::setRobotDesiredDOFCB, this);
 
@@ -78,7 +78,7 @@ int GraspitInterface::init(int argc, char** argv)
     dynamicAutoGraspComplete_srv= nh->advertiseService("dynamicAutoGraspComplete", &GraspitInterface::dynamicAutoGraspCompleteCB, this);
 
     plan_grasps_as = new actionlib::SimpleActionServer<graspit_interface::PlanGraspsAction>(*nh, "planGrasps",
-                                                                                            boost::bind(&GraspitInterface::PlanGraspsCB, this, _1), false);
+            boost::bind(&GraspitInterface::PlanGraspsCB, this, _1), false);
     plan_grasps_as->start();
 
     firstTimeInMainLoop = true;
@@ -109,27 +109,34 @@ int GraspitInterface::mainLoop()
 } 
 
 bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
-                                  graspit_interface::GetRobot::Response &response)
+        graspit_interface::GetRobot::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
         Robot *r = graspitCore->getWorld()->getRobot(request.id);
-        transf t = r->getTran();
 
-        geometry_msgs::Pose pose = geometry_msgs::Pose();
+        response.robot.pose = transfToRosMsg(r->getTran());
+        response.robot.approach_direction = transfToRosMsg(r->getApproachTran());
 
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
+        // Info for all contacts with this robot:
+        std::list<Contact*> contacts = r->getContacts();
+        for (std::list<Contact*>::iterator it = contacts.begin();
+                it != contacts.end(); it++) {
+            graspit_interface::Contact c;
+            c.body1 = (*it)->getBody1()->getName().toStdString();
+            c.body2 = (*it)->getBody2()->getName().toStdString();
+            
+            position p = (*it)->getPosition();
+            c.position.x = p.x() * 0.001; 
+            c.position.y = p.y() * 0.001; 
+            c.position.z = p.z() * 0.001; 
+            c.cof = (*it)->getCof();
+            response.robot.contacts.push_back(c);
+        }
 
-        response.robot.pose = pose;
-
+        // Joint state and DOF information:
         for (int i=0; i < r->getNumJoints(); i++) {
             sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
             response.robot.joints.push_back(robot_joint_state);
@@ -145,60 +152,86 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
 }
 
 bool GraspitInterface::getGraspableBodyCB(graspit_interface::GetGraspableBody::Request &request,
-                graspit_interface::GetGraspableBody::Response &response)
+        graspit_interface::GetGraspableBody::Response &response)
 {
     if (graspitCore->getWorld()->getNumGB() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
         GraspableBody *b = graspitCore->getWorld()->getGB(request.id);
-        transf t = b->getTran();
 
-        geometry_msgs::Pose pose = geometry_msgs::Pose();
+        response.graspable_body.pose = transfToRosMsg(b->getTran());
 
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
-
-        response.graspable_body.pose = pose;
+        response.graspable_body.element_name = b->getName().toStdString();
         return true;
     }
     return true;
 }
 
 bool GraspitInterface::getBodyCB(graspit_interface::GetBody::Request &request,
-                graspit_interface::GetBody::Response &response)
+        graspit_interface::GetBody::Response &response)
 {
     if (graspitCore->getWorld()->getNumBodies() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
         Body *b = graspitCore->getWorld()->getBody(request.id);
-        transf t = b->getTran();
+        // Get Body properties:
+        response.body.pose = transfToRosMsg(b->getTran());
+        response.body.element_name = b->getName().toStdString(); 
+        response.body.material = b->getMaterial();
+        response.body.transparency = b->getTransparency();
+        response.body.youngs_modulus = b->getYoungs();
+        response.body.is_dynamic = b->isDynamic();
+        // Dynamic body properties, if applicable:
+        if (b->isDynamic()) {
+            DynamicBody * db = (DynamicBody*) b;
+            response.body.max_radius = db->getMaxRadius();
 
-        geometry_msgs::Pose pose = geometry_msgs::Pose();
+            // ROS inertia msg includes mass, center mass, & inertia tensor:
+            geometry_msgs::Inertia inert;
+            // ros mass = kgs.  graspit mass = grams:
+            inert.m = db->getMass() * 0.001; 
+            position cog = db->getCoG();
+            inert.com.x = cog.x(); inert.com.y = cog.y(); inert.com.z = cog.z(); 
+            const double * in = db->getInertia();
+            // TODO not sure if these line up right:
+            inert.ixx = in[0]; inert.ixy = in[1]; inert.ixz = in[2];
+            inert.iyy = in[4]; inert.iyz = in[5]; inert.izz = in[8];
+            response.body.inertia = inert;
 
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
+            // ROS accel msg:
+            geometry_msgs::Accel accel; 
+            geometry_msgs::Vector3 lin;
+            geometry_msgs::Vector3 ang;
+            const double * ac = db->getAccel();
+            // TODO not sure if these line up right:
+            lin.x = ac[0]; lin.y = ac[1]; lin.z = ac[2]; 
+            ang.x = ac[3]; ang.y = ac[4]; ang.z = ac[5]; 
+            accel.linear = lin; accel.angular = ang;
+            response.body.accel = accel;
 
-        response.body.pose = pose;
-
-        return true;
+            // ROS vel msg:
+            geometry_msgs::Twist vel; 
+            const double * v = db->getVelocity();
+            // TODO not sure if these line up right:
+            lin.x = v[0]; lin.y = v[1]; lin.z = v[2]; 
+            ang.x = v[3]; ang.y = v[4]; ang.z = v[5]; 
+            vel.linear = lin; vel.angular = ang;
+            response.body.velocity = vel;
+        }
+        else {
+            response.body.inertia = geometry_msgs::Inertia();
+            response.body.accel = geometry_msgs::Accel();
+            response.body.velocity = geometry_msgs::Twist();
+            response.body.max_radius = -1;
+        }
     }
     return true;
 }
 
 bool GraspitInterface::getRobotsCB(graspit_interface::GetRobots::Request &request,
-                graspit_interface::GetRobots::Response &response)
+        graspit_interface::GetRobots::Response &response)
 {
     for (int i=0; i < graspitCore->getWorld()->getNumRobots(); i++)
     {
@@ -208,7 +241,7 @@ bool GraspitInterface::getRobotsCB(graspit_interface::GetRobots::Request &reques
 }
 
 bool GraspitInterface::getGraspableBodiesCB(graspit_interface::GetGraspableBodies::Request &request,
-                graspit_interface::GetGraspableBodies::Response &response)
+        graspit_interface::GetGraspableBodies::Response &response)
 {
     for (int i=0; i < graspitCore->getWorld()->getNumGB(); i++)
     {
@@ -218,32 +251,25 @@ bool GraspitInterface::getGraspableBodiesCB(graspit_interface::GetGraspableBodie
 }
 
 bool GraspitInterface::getBodiesCB(graspit_interface::GetBodies::Request &request,
-                graspit_interface::GetBodies::Response &response)
+        graspit_interface::GetBodies::Response &response)
 {
     for (int i=0; i < graspitCore->getWorld()->getNumBodies(); i++)
     {
         response.ids.push_back(i);
+        QString name = graspitCore->getWorld()->getBody(i)->getName();
+        response.element_names.push_back(name.toStdString());
     }
     return true;
 }
 
 bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &request,
-                graspit_interface::SetRobotPose::Response &response)
+        graspit_interface::SetRobotPose::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
-        vec3 newTranslation(request.pose.position.x * 1000.0,
-                            request.pose.position.y * 1000.0,
-                            request.pose.position.z * 1000.0);
-
-        Quaternion newRotation(request.pose.orientation.w,
-                               request.pose.orientation.x,
-                               request.pose.orientation.y,
-                               request.pose.orientation.z);
-
-        transf newTransform(newRotation, newTranslation);
+        transf newTransform = rosMsgToTransf(request.pose);
 
         graspitCore->getWorld()->getRobot(request.id)->setTran(newTransform);
         return true;
@@ -251,23 +277,13 @@ bool GraspitInterface::setRobotPoseCB(graspit_interface::SetRobotPose::Request &
 }
 
 bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBodyPose::Request &request,
-                graspit_interface::SetGraspableBodyPose::Response &response)
+        graspit_interface::SetGraspableBodyPose::Response &response)
 {
     if (graspitCore->getWorld()->getNumGB() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
-
-        vec3 newTranslation(request.pose.position.x * 1000.0,
-                            request.pose.position.y * 1000.0,
-                            request.pose.position.z * 1000.0);
-
-        Quaternion newRotation(request.pose.orientation.w,
-                               request.pose.orientation.x,
-                               request.pose.orientation.y,
-                               request.pose.orientation.z);
-
-        transf newTransform(newRotation, newTranslation);
+        transf newTransform = rosMsgToTransf(request.pose);
 
         graspitCore->getWorld()->getGB(request.id)->setTran(newTransform);
         return true;
@@ -275,23 +291,13 @@ bool GraspitInterface::setGraspableBodyPoseCB(graspit_interface::SetGraspableBod
 }
 
 bool GraspitInterface::setBodyPoseCB(graspit_interface::SetBodyPose::Request &request,
-                graspit_interface::SetBodyPose::Response &response)
+        graspit_interface::SetBodyPose::Response &response)
 {
     if (graspitCore->getWorld()->getNumBodies() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
         return true;
     } else {
-
-        vec3 newTranslation(request.pose.position.x * 1000.0,
-                            request.pose.position.y * 1000.0,
-                            request.pose.position.z * 1000.0);
-
-        Quaternion newRotation(request.pose.orientation.w,
-                               request.pose.orientation.x,
-                               request.pose.orientation.y,
-                               request.pose.orientation.z);
-
-        transf newTransform(newRotation, newTranslation);
+        transf newTransform = rosMsgToTransf(request.pose);
 
         graspitCore->getWorld()->getBody(request.id)->setTran(newTransform);
         return true;
@@ -299,14 +305,14 @@ bool GraspitInterface::setBodyPoseCB(graspit_interface::SetBodyPose::Request &re
 }
 
 bool GraspitInterface::getDynamicsCB(graspit_interface::GetDynamics::Request &request,
-                graspit_interface::GetDynamics::Response &response)
+        graspit_interface::GetDynamics::Response &response)
 {
     response.dynamicsEnabled = graspitCore->getWorld()->dynamicsAreOn();
     return true;
 }
 
 bool GraspitInterface::setDynamicsCB(graspit_interface::SetDynamics::Request &request,
-                graspit_interface::SetDynamics::Response &response)
+        graspit_interface::SetDynamics::Response &response)
 {
     if(request.enableDynamics && (!graspitCore->getWorld()->dynamicsAreOn()))
     {
@@ -321,7 +327,7 @@ bool GraspitInterface::setDynamicsCB(graspit_interface::SetDynamics::Request &re
 }
 
 bool GraspitInterface::autoGraspCB(graspit_interface::AutoGrasp::Request &request,
-                       graspit_interface::AutoGrasp::Response &response)
+        graspit_interface::AutoGrasp::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
@@ -334,7 +340,7 @@ bool GraspitInterface::autoGraspCB(graspit_interface::AutoGrasp::Request &reques
 }
 
 bool GraspitInterface::autoOpenCB(graspit_interface::AutoOpen::Request &request,
-                   graspit_interface::AutoOpen::Response &response)
+        graspit_interface::AutoOpen::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
@@ -347,7 +353,7 @@ bool GraspitInterface::autoOpenCB(graspit_interface::AutoOpen::Request &request,
 }
 
 bool GraspitInterface::forceRobotDOFCB(graspit_interface::ForceRobotDOF::Request &request,
-                                       graspit_interface::ForceRobotDOF::Response &response)
+        graspit_interface::ForceRobotDOF::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
@@ -356,14 +362,30 @@ bool GraspitInterface::forceRobotDOFCB(graspit_interface::ForceRobotDOF::Request
         response.result = response.RESULT_DYNAMICS_MODE_ENABLED;
         return true;
     } else {
-        graspitCore->getWorld()->getHand(request.id)->forceDOFVals(request.dofs.data());
+        // Check that desired values are within range.
+        //  If outside valid range, cap at min/max.
+        Hand *hand = graspitCore->getWorld()->getHand(request.id);
+        double * dof = request.dofs.data();
+        for (int d=0; d<hand->getNumDOF(); d++) {
+            if (dof[d] < hand->getDOF(d)->getMin()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at min.",
+                        dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMin();
+            }  
+            else if (dof[d] > hand->getDOF(d)->getMax()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at max.",
+                        dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMax();
+            }
+        }
+        hand->forceDOFVals(dof);
         response.result = response.RESULT_SUCCESS;
         return true;
     }
 }
 
 bool GraspitInterface::moveDOFToContactsCB(graspit_interface::MoveDOFToContacts::Request &request,
-                     graspit_interface::MoveDOFToContacts::Response &response)
+        graspit_interface::MoveDOFToContacts::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
@@ -379,7 +401,7 @@ bool GraspitInterface::moveDOFToContactsCB(graspit_interface::MoveDOFToContacts:
 }
 
 bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDOF::Request &request,
-                                            graspit_interface::SetRobotDesiredDOF::Response &response)
+        graspit_interface::SetRobotDesiredDOF::Response &response)
 {
     if (graspitCore->getWorld()->getNumRobots() <= request.id) {
         response.result = response.RESULT_INVALID_ID;
@@ -388,24 +410,41 @@ bool GraspitInterface::setRobotDesiredDOFCB(graspit_interface::SetRobotDesiredDO
         response.result = response.RESULT_DYNAMICS_MODE_DISABLED;
         return true;
     } else {
-        for(int i=0; i < graspitCore->getWorld()->getHand(request.id)->getNumDOF(); i++) {
-            graspitCore->getWorld()->getHand(request.id)->getDOF(i)->setDesiredVelocity(request.dof_velocities.data()[i]);
+        Hand *hand = graspitCore->getWorld()->getHand(request.id);
+        for(int i=0; i < hand->getNumDOF(); i++) {
+            hand->getDOF(i)->setDesiredVelocity(request.dof_velocities.data()[i]);
         }
-        graspitCore->getWorld()->getHand(request.id)->setDesiredDOFVals(request.dofs.data());
+        // Check that desired values are within range.
+        //  If outside valid range, cap at min/max.
+        double * dof = request.dofs.data();
+        for (int d=0; d<hand->getNumDOF(); d++) {
+            if (dof[d] < hand->getDOF(d)->getMin()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at min.",
+                        dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMin();
+            }  
+            else if (dof[d] > hand->getDOF(d)->getMax()) {
+                ROS_WARN("Desired value %f is out of range for DOF %d.  (min: %f, max:%f).\n\tCapped value at max.",
+                        dof[d], d, hand->getDOF(d)->getMin(),hand->getDOF(d)->getMax());
+                dof[d] = hand->getDOF(d)->getMax();
+            }
+        }
+
+        hand->setDesiredDOFVals(request.dofs.data());
         response.result = response.RESULT_SUCCESS;
         return true;
     }
 }
 
 bool GraspitInterface::importRobotCB(graspit_interface::ImportRobot::Request &request,
-                       graspit_interface::ImportRobot::Response &response)
+        graspit_interface::ImportRobot::Response &response)
 {
     QString filename = QString(getenv("GRASPIT"))+
-            QString("/models/robots/") +
-            QString(request.filename.data()) +
-            QString("/") +
-            QString(request.filename.data()) +
-            QString(".xml");
+        QString("/models/robots/") +
+        QString(request.filename.data()) +
+        QString("/") +
+        QString(request.filename.data()) +
+        QString(".xml");
 
     ROS_INFO("Loading %s",filename.toStdString().c_str());
 
@@ -414,16 +453,18 @@ bool GraspitInterface::importRobotCB(graspit_interface::ImportRobot::Request &re
         response.result = response.RESULT_FAILURE;
         return true;
     }
+    // Identifier for this body.
+    response.element_name = r->getName().toStdString(); 
     return true;
 }
 
 bool GraspitInterface::importObstacleCB(graspit_interface::ImportObstacle::Request &request,
-                   graspit_interface::ImportObstacle::Response &response)
+        graspit_interface::ImportObstacle::Response &response)
 {
     QString filename = QString(getenv("GRASPIT"))+
-            QString("/models/obstacles/") +
-            QString(request.filename.data()) +
-            QString(".xml");
+        QString("/models/obstacles/") +
+        QString(request.filename.data()) +
+        QString(".xml");
 
     ROS_INFO("Loading %s", filename.toStdString().c_str());
 
@@ -432,16 +473,18 @@ bool GraspitInterface::importObstacleCB(graspit_interface::ImportObstacle::Reque
         response.result = response.RESULT_FAILURE;
         return true;
     }
+    // Identifier for this body.
+    response.element_name = b->getName().toStdString(); 
     return true;
 }
 
 bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableBody::Request &request,
-                   graspit_interface::ImportGraspableBody::Response &response)
+        graspit_interface::ImportGraspableBody::Response &response)
 {
     QString filename = QString(getenv("GRASPIT"))+
-            QString("/models/objects/") +
-            QString(request.filename.data()) +
-            QString(".xml");
+        QString("/models/objects/") +
+        QString(request.filename.data()) +
+        QString(".xml");
 
     ROS_INFO("Loading %s",filename.toStdString().c_str());
     //First try to load from Graspit Directory
@@ -454,17 +497,19 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
             return true;
         }
     }
+
+    // Identifier for this body.
+    response.element_name = b->getName().toStdString(); 
     return true;
 }
 
-
 bool GraspitInterface::loadWorldCB(graspit_interface::LoadWorld::Request &request,
-                       graspit_interface::LoadWorld::Response &response)
+        graspit_interface::LoadWorld::Response &response)
 {
     QString filename = QString(getenv("GRASPIT"))+
-            QString("/worlds/") +
-            QString(request.filename.data()) +
-            QString(".xml");
+        QString("/worlds/") +
+        QString(request.filename.data()) +
+        QString(".xml");
 
     ROS_INFO("Loading World: %s",filename.toStdString().c_str());
     int result = graspitCore->getWorld()->load(filename);
@@ -476,12 +521,12 @@ bool GraspitInterface::loadWorldCB(graspit_interface::LoadWorld::Request &reques
 }
 
 bool GraspitInterface::saveWorldCB(graspit_interface::SaveWorld::Request &request,
-                   graspit_interface::SaveWorld::Response &response)
+        graspit_interface::SaveWorld::Response &response)
 {
     QString filename = QString(getenv("GRASPIT"))+
-            QString("/worlds/") +
-            QString(request.filename.data()) +
-            QString(".xml");
+        QString("/worlds/") +
+        QString(request.filename.data()) +
+        QString(".xml");
 
     ROS_INFO("Saving World: %s",filename.toStdString().c_str());
     int result = graspitCore->getWorld()->save(filename);
@@ -493,7 +538,7 @@ bool GraspitInterface::saveWorldCB(graspit_interface::SaveWorld::Request &reques
 }
 
 bool GraspitInterface::clearWorldCB(graspit_interface::ClearWorld::Request &request,
-                   graspit_interface::ClearWorld::Response &response)
+        graspit_interface::ClearWorld::Response &response)
 {
     ROS_INFO("Emptying World");
     graspitCore->emptyWorld();
@@ -501,12 +546,12 @@ bool GraspitInterface::clearWorldCB(graspit_interface::ClearWorld::Request &requ
 }
 
 bool GraspitInterface::saveImageCB(graspit_interface::SaveImage::Request &request,
-                   graspit_interface::SaveImage::Response &response)
+        graspit_interface::SaveImage::Response &response)
 {
     QString filename = QString(getenv("GRASPIT"))+
-            QString("/images/") +
-            QString(request.filename.data()) +
-            QString(".jpg");
+        QString("/images/") +
+        QString(request.filename.data()) +
+        QString(".jpg");
 
     ROS_INFO("Saving Image: %s",filename.toStdString().c_str());
     graspitCore->getIVmgr()->saveImage(filename);
@@ -514,7 +559,7 @@ bool GraspitInterface::saveImageCB(graspit_interface::SaveImage::Request &reques
 }
 
 bool GraspitInterface::toggleAllCollisionsCB(graspit_interface::ToggleAllCollisions::Request &request,
-                   graspit_interface::ToggleAllCollisions::Response &response)
+        graspit_interface::ToggleAllCollisions::Response &response)
 {
     graspitCore->getWorld()->toggleAllCollisions(request.enableCollisions);
     if(request.enableCollisions)
@@ -529,7 +574,7 @@ bool GraspitInterface::toggleAllCollisionsCB(graspit_interface::ToggleAllCollisi
 }
 
 bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Request &request,
-                                         graspit_interface::ComputeQuality::Response &response)
+        graspit_interface::ComputeQuality::Response &response)
 {
     CollisionReport colReport;
 
@@ -564,7 +609,7 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
 }
 
 bool GraspitInterface::approachToContactCB(graspit_interface::ApproachToContact::Request &request,
-                                           graspit_interface::ApproachToContact::Response &response)
+        graspit_interface::ApproachToContact::Response &response)
 {
     Hand *mHand =graspitCore->getWorld()->getHand(request.id);
     if (mHand==NULL)
@@ -805,17 +850,10 @@ void GraspitInterface::runPlannerInMainThread()
         mHand->autoGrasp(false,1.0,false);
 
         ROS_INFO("Building Pose");
-        geometry_msgs::Pose pose;
-        transf t = mHand->getTran();
-        pose.position.x = t.translation().x() / 1000.0;
-        pose.position.y = t.translation().y() / 1000.0;;
-        pose.position.z = t.translation().z() / 1000.0;;
-        pose.orientation.w = t.rotation().w;
-        pose.orientation.x = t.rotation().x;
-        pose.orientation.y = t.rotation().y;
-        pose.orientation.z = t.rotation().z;
 
         graspit_interface::Grasp g;
+        g.pose = transfToRosMsg(mHand->getTran());
+
         g.graspable_body_id = goal.graspable_body_id;
 
         double dof[mHand->getNumDOF()];
@@ -825,7 +863,6 @@ void GraspitInterface::runPlannerInMainThread()
             g.dofs.push_back(dof[i]);
         }
 
-        g.pose = pose;
         mHand->getGrasp()->update();
         QualVolume mVolQual( mHand->getGrasp(), ("Volume"),"L1 Norm");
         QualEpsilon mEpsQual( mHand->getGrasp(), ("Epsilon"),"L1 Norm");

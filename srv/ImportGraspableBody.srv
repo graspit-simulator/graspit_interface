@@ -1,5 +1,6 @@
 string filename
 ---
+string element_name #UID for the body's world element.
 uint8 RESULT_SUCCESS    = 0
 uint8 RESULT_FAILURE    = 1
 
