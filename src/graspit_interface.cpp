@@ -419,6 +419,17 @@ bool GraspitInterface::importRobotCB(graspit_interface::ImportRobot::Request &re
         response.result = response.RESULT_FAILURE;
         return true;
     }
+    vec3 newTranslation(request.pose.position.x * 1000.0,
+                        request.pose.position.y * 1000.0,
+                        request.pose.position.z * 1000.0);
+
+    Quaternion newRotation(request.pose.orientation.w,
+                           request.pose.orientation.x,
+                           request.pose.orientation.y,
+                           request.pose.orientation.z);
+
+    transf newTransform(newRotation, newTranslation);
+    r->setTran(newTransform);
     return true;
 }
 
@@ -437,6 +448,18 @@ bool GraspitInterface::importObstacleCB(graspit_interface::ImportObstacle::Reque
         response.result = response.RESULT_FAILURE;
         return true;
     }
+
+    vec3 newTranslation(request.pose.position.x * 1000.0,
+                        request.pose.position.y * 1000.0,
+                        request.pose.position.z * 1000.0);
+
+    Quaternion newRotation(request.pose.orientation.w,
+                           request.pose.orientation.x,
+                           request.pose.orientation.y,
+                           request.pose.orientation.z);
+
+    transf newTransform(newRotation, newTranslation);
+    b->setTran(newTransform);
     return true;
 }
 
@@ -459,6 +482,19 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
             return true;
         }
     }
+
+    vec3 newTranslation(request.pose.position.x * 1000.0,
+                        request.pose.position.y * 1000.0,
+                        request.pose.position.z * 1000.0);
+
+    Quaternion newRotation(request.pose.orientation.w,
+                           request.pose.orientation.x,
+                           request.pose.orientation.y,
+                           request.pose.orientation.z);
+
+    transf newTransform(newRotation, newTranslation);
+    b->setTran(newTransform);
+
     return true;
 }
 
