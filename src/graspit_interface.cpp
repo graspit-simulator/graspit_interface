@@ -822,6 +822,14 @@ void GraspitInterface::runPlannerInMainThread()
         pose.orientation.y = t.rotation().y();
         pose.orientation.z = t.rotation().z();
 
+        geometry_msgs::Vector3Stamped approach_direction;
+        vec3 approachInHand = mHand->getApproachTran() *  vec3 (0, 0, 1);
+        approachInHand.normalize();
+        approach_direction.vector.x = approachInHand.x();
+        approach_direction.vector.y = approachInHand.y();
+        approach_direction.vector.z = approachInHand.z();
+        approach_direction.header.frame_id = mHand->getName().toStdString();
+
         graspit_interface::Grasp g;
         g.graspable_body_id = goal.graspable_body_id;
 
@@ -842,6 +850,7 @@ void GraspitInterface::runPlannerInMainThread()
 
         g.epsilon_quality= mEpsQual.evaluate();
         g.volume_quality = mVolQual.evaluate();
+        g.approach_direction = approach_direction;
 
         ROS_INFO("Pushing back grasp");
         result_.grasps.push_back(g);
