@@ -101,6 +101,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    DIRECTORY action
    FILES
    PlanGrasps.action
+   CheckGraspReachability.action
  )
 
 ## Generate added messages and services with any dependencies listed here

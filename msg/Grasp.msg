@@ -10,10 +10,12 @@ float64[] dofs
 float64 epsilon_quality
 float64 volume_quality
 
-
 # The approach direction to take before picking an object
 geometry_msgs/Vector3Stamped approach_direction
 
+#model_name of object to be grasped
+string object_name
 
+int32 grasp_id
 
 
