@@ -199,6 +199,28 @@ private:
   //ActionServer callbacks
   void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
 
+
+  // Convenience functions for converting between pose types:
+    inline geometry_msgs::Pose transfToRosMsg(transf pose) {
+        geometry_msgs::Pose ret;
+        ret.position.x = pose.translation().x() / 1000.0;
+        ret.position.y = pose.translation().y() / 1000.0;;
+        ret.position.z = pose.translation().z() / 1000.0;;
+        ret.orientation.w = pose.rotation().w();
+        ret.orientation.x = pose.rotation().x();
+        ret.orientation.y = pose.rotation().y();
+        ret.orientation.z = pose.rotation().z();
+        return ret;
+    }
+    inline transf rosMsgToTransf(geometry_msgs::Pose pose) {
+        Quaternion q(pose.orientation.w, pose.orientation.x, 
+                pose.orientation.y, pose.orientation.z);
+        vec3 p(pose.position.x * 1000.0, pose.position.y * 1000.0, 
+                pose.position.z * 1000.0);
+        transf ret(q, p);
+        return ret;
+}
+
 public: 
   GraspitInterface(){}
   ~GraspitInterface(){}
