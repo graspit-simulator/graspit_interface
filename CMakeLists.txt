@@ -189,6 +189,7 @@ add_library(graspit_interface
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(graspit_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${QT_DEFINITIONS})
+add_dependencies(graspit_interface ${PROJECT_NAME}_gencpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(graspit_interface
