@@ -56,6 +56,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    GraspableBody.msg
    Robot.msg
    Grasp.msg
+   GraspStatus.msg
    Planner.msg
    SearchSpace.msg
    SearchContact.msg
@@ -101,6 +102,8 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    DIRECTORY action
    FILES
    PlanGrasps.action
+   GraspExecution.action
+   PlaceExecution.action
    CheckGraspReachability.action
  )
 
