@@ -1,0 +1,7 @@
+#goal definition
+graspit_interface/Grasp grasp
+---
+#result definition
+bool success
+---
+#feedback

@@ -466,6 +466,8 @@ bool GraspitInterface::importObstacleCB(graspit_interface::ImportObstacle::Reque
 bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableBody::Request &request,
                    graspit_interface::ImportGraspableBody::Response &response)
 {
+
+    std::cout << "Beginning of importGraspableBodyCB" << std::endl;
     QString filename = QString(getenv("GRASPIT"))+
             QString("/models/objects/") +
             QString(request.filename.data()) +
@@ -473,27 +475,31 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
 
     ROS_INFO("Loading %s",filename.toStdString().c_str());
     //First try to load from Graspit Directory
+    std::cout << "loading body of importGraspableBodyCB" << std::endl;
     Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),filename);
+    std::cout << "DID NOT FAIL TO LOAD BODY" << std::endl;
     if(b == NULL){
+        filename = QString(request.filename.data());
+        ROS_INFO("Failed Loading %s from GRASPIT dir, trying with absolute path now.",filename.toStdString().c_str());
         //Now try to load using unaltered filepath from request.
-        Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),QString(request.filename.data()));
+        Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),filename);
         if(b == NULL){
             response.result = response.RESULT_FAILURE;
             return true;
         }
     }
 
-    vec3 newTranslation(request.pose.position.x * 1000.0,
-                        request.pose.position.y * 1000.0,
-                        request.pose.position.z * 1000.0);
+//    vec3 newTranslation(request.pose.position.x * 1000.0,
+//                        request.pose.position.y * 1000.0,
+//                        request.pose.position.z * 1000.0);
 
-    Quaternion newRotation(request.pose.orientation.w,
-                           request.pose.orientation.x,
-                           request.pose.orientation.y,
-                           request.pose.orientation.z);
+//    Quaternion newRotation(request.pose.orientation.w,
+//                           request.pose.orientation.x,
+//                           request.pose.orientation.y,
+//                           request.pose.orientation.z);
 
-    transf newTransform(newRotation, newTranslation);
-    b->setTran(newTransform);
+//    transf newTransform(newRotation, newTranslation);
+//    b->setTran(newTransform);
 
     return true;
 }
