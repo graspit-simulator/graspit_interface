@@ -476,7 +476,7 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
     Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),filename);
     if(b == NULL){
         //Now try to load using unaltered filepath from request.
-        Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),QString(request.filename.data()));
+        b = graspitCore->getWorld()->importBody(QString("GraspableBody"),QString(request.filename.data()));
         if(b == NULL){
             response.result = response.RESULT_FAILURE;
             return true;
