@@ -56,8 +56,11 @@ install:
 # non-zero when a test fails (which notifies Travis the build failed).
 script:
   - source /opt/ros/$ROS_DISTRO/setup.bash
-  - cd $CI_SOURCE_PATH
-  - cd ..
+  - cd
+  - mkdir -p test_ws/src
+  - cd test_ws/src
+  - echo CI_SOURCE_PATH $CI_SOURCE_PATH
+  - ln -s $CI_SOURCE_PATH graspit_interface
   - git clone https://github.com/graspit-simulator/graspit-ros --recursive
   - catkin_init_workspace
   - cd ..
