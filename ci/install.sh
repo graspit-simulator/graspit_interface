@@ -1,5 +1,3 @@
-export ROS_DISTRO=indigo
-
 APT='
 cmake
 libqt4-dev
@@ -14,11 +12,11 @@ libeigen3-dev
 python-catkin-pkg
 python-rosdep
 python-wstool
-ros-${ROS_DISTRO}-catkin
-ros-${ROS_DISTRO}-sensor-msgs
-ros-${ROS_DISTRO}-geometry-msgs
-ros-${ROS_DISTRO}-tf-conversions
-ros-${ROS_DISTRO}-shape-msgs
+ros-indigo-catkin
+ros-indigo-sensor-msgs
+ros-indigo-geometry-msgs
+ros-indigo-tf-conversions
+ros-indigo-shape-msgs
 '
 
 sudo apt-get -qq --yes --force-yes install $APT
