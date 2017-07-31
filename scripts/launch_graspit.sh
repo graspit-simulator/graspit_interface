@@ -8,6 +8,6 @@ else
     export GRASPIT=$(rospack find graspit)/graspit_source
 fi
 
-export GRASPIT_PLUGIN_DIR=$(dirname $(catkin_find libgraspit_interface.so))
+export GRASPIT_PLUGIN_DIR=$(dirname $(catkin_find --first-only libgraspit_interface.so))
 
 rosrun graspit graspit_simulator -p libgraspit_interface --node_name graspit
