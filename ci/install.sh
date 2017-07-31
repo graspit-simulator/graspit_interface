@@ -1,3 +1,5 @@
+export ROS_DISTRO=indigo
+
 APT='
 cmake
 libqt4-dev
