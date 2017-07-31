@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/iretiayo/graspit_interface.svg?branch=master)](https://travis-ci.org/iretiayo/graspit_interface)
+
 graspit_interface
 =================
 
