@@ -8,9 +8,9 @@
 #endif
 
 //GraspIt! includes
-#include <graspit_source/include/plugin.h>
-#include "graspit_source/include/EGPlanner/searchState.h"
-#include "graspit_source/include/EGPlanner/simAnnPlanner.h"
+#include <graspit/plugin.h>
+#include <graspit/EGPlanner/searchState.h>
+#include <graspit/EGPlanner/simAnnPlanner.h>
 
 //Message includes
 #include <graspit_interface/SearchSpace.h>
