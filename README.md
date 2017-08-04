@@ -15,7 +15,8 @@ To see how a client interacts with this interface, check out our python client
 GraspIt Setup:
 ------
 ```
-git clone git@github.com:graspit-simulator/graspit.git
+git clone https://github.com/graspit-simulator/graspit.git
+cd graspit
 mkdir build
 cd build
 cmake ..
