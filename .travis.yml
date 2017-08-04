@@ -53,6 +53,7 @@ install:
 # fails. Running `catkin_test_results` aggregates all the results and returns
 # non-zero when a test fails (which notifies Travis the build failed).
 script:
+  - cd
   - git clone git@github.com:graspit-simulator/graspit.git
   - cd graspit
   - mkdir build
