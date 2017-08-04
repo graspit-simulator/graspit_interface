@@ -12,7 +12,23 @@ To see how a client interacts with this interface, check out our python client
 [graspit_commander](https://github.com/graspit-simulator/graspit_commander).
 
 
-Setup:
+GraspIt Setup:
+------
+```
+git clone git@github.com:graspit-simulator/graspit.git
+mkdir build
+cd build
+cmake ..
+make -j5
+sudo make install
+```
+
+You might need to add /usr/local/lib to the loaded library path as in:
+```
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+```
+
+ROS Setup:
 ------
 ```
 //create ros workspace
@@ -23,7 +39,6 @@ source /opt/ros/indigo/setup.bash
 catkin_init_workspace . 
 
 //clone packages
-git clone https://github.com/graspit-simulator/graspit-ros.git --recursive
 git clone https://github.com/graspit-simulator/graspit_interface.git
 git clone https://github.com/graspit-simulator/graspit_commander.git
 
