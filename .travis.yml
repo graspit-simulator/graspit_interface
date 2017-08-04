@@ -35,7 +35,7 @@ env:
 
 ################################################################################
 
-# Install system dependencies, namely a very barebones ROS setup.
+# Install system dependencies, namely a very barebones ROS setup#.
 before_install:
   - sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
   - sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
@@ -53,13 +53,20 @@ install:
 # fails. Running `catkin_test_results` aggregates all the results and returns
 # non-zero when a test fails (which notifies Travis the build failed).
 script:
+  - cd
+  - git clone https://github.com/graspit-simulator/graspit.git
+  - cd graspit
+  - mkdir build
+  - cd build
+  - cmake ..
+  - sudo make install
+  - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
   - source /opt/ros/$ROS_DISTRO/setup.bash
   - cd
   - mkdir -p test_ws/src
   - cd test_ws/src
   - echo CI_SOURCE_PATH $CI_SOURCE_PATH
   - ln -s $CI_SOURCE_PATH graspit_interface
-  - git clone https://github.com/graspit-simulator/graspit-ros --recursive
   - catkin_init_workspace
   - cd ..
   - catkin_make
