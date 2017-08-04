@@ -3,7 +3,7 @@
 graspit_interface
 =================
 
-This plugin exposes a ROS interface for the GraspIt! simulator via [graspit-ros](https://github.com/graspit-simulator/graspit-ros). The main purpose for writing this plugin was to demonstrate what we believe is the easiest way to expose GraspIt!
+This plugin exposes a ROS interface for the GraspIt! simulator. The main purpose for writing this plugin was to demonstrate what we believe is the easiest way to expose GraspIt!
 functionality as a variety ROS services and action servers. 
 
 Please feel free to use this as a template to write your own bridge between a ros system and GraspIt!.
