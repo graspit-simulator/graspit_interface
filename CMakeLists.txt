@@ -91,6 +91,7 @@ find_package(graspit)
    SaveImage.srv
    ToggleAllCollisions.srv
    ComputeQuality.srv
+   ComputeEnergy.srv
    ApproachToContact.srv
    FindInitialContact.srv
    DynamicAutoGraspComplete.srv
