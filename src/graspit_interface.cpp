@@ -13,6 +13,8 @@
 #include <graspit/EGPlanner/egPlanner.h>
 #include <graspit/EGPlanner/simAnnPlanner.h>
 #include <graspit/EGPlanner/guidedPlanner.h>
+#include <graspit/EGPlanner/energy/searchEnergyFactory.h>
+#include<graspit/EGPlanner/energy/searchEnergy.h>
 
 #include <graspit/cmdline/cmdline.h>
 
@@ -73,6 +75,7 @@ int GraspitInterface::init(int argc, char** argv)
     toggleAllCollisions_srv = nh->advertiseService("toggleAllCollisions", &GraspitInterface::toggleAllCollisionsCB, this);
 
     computeQuality_srv = nh->advertiseService("computeQuality", &GraspitInterface::computeQualityCB, this);
+    computeEnergy_srv = nh->advertiseService("computeEnergy", &GraspitInterface::computeEnergyCB, this);
 
     approachToContact_srv = nh->advertiseService("approachToContact", &GraspitInterface::approachToContactCB, this);
     findInitialContact_srv = nh->advertiseService("findInitialContact", &GraspitInterface::findInitialContactCB, this);
@@ -574,7 +577,6 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
                                          graspit_interface::ComputeQuality::Response &response)
 {
     CollisionReport colReport;
-
     // first test whether the hand is in collision now
     int numCols = graspitCore->getWorld()->getCollisionReport(&colReport);
     // if it is in collision, then there should be no reason to calculate the quality
@@ -584,7 +586,6 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
         response.volume = -1.0;
         return true;
     }
-
     Hand *mHand =graspitCore->getWorld()->getHand(request.id);
     if (mHand==NULL)
     {
@@ -602,6 +603,47 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
 
     response.epsilon = mEpsQual.evaluate();
     response.volume = mVolQual.evaluate();
+
+    return true;
+}
+
+bool GraspitInterface::computeEnergyCB(graspit_interface::ComputeEnergy::Request &request,
+                                         graspit_interface::ComputeEnergy::Response &response)
+{
+    Hand *mHand =graspitCore->getWorld()->getHand(request.handId);
+    if (mHand==NULL)
+    {
+        response.result = response.RESULT_INVALID_HAND_ID;
+        ROS_INFO("Planning Hand is NULL");
+        return true;
+    }
+    GraspableBody *mObject = graspitCore->getWorld()->getGB(request.graspableBodyId);
+    if(mObject == NULL)
+    {
+        ROS_INFO("Planning Object is NULL");
+        response.result = response.RESULT_INVALID_BODY_ID;
+        return true;
+    }
+
+    graspitCore->getWorld()->findAllContacts();
+    graspitCore->getWorld()->updateGrasps();
+
+    std::vector<std::string> energyTypes = SearchEnergyFactory::getInstance()->getAllRegisteredEnergy();
+    if(std::find(energyTypes.begin(),energyTypes.end(), request.energyType) == energyTypes.end())
+      {
+        ROS_INFO_STREAM("Invalid Energy Type " << request.energyType << std::endl);
+        response.result = response.RESULT_INVALID_ENERGY_TYPE;
+        return true;
+      }
+
+    SearchEnergy *se = SearchEnergyFactory::getInstance()->createEnergy(request.energyType);
+
+    bool isLegal;
+    double stateEnergy;
+    se->analyzeCurrentPosture(mHand, mObject, isLegal, stateEnergy);
+    response.isLegal = isLegal;
+    response.energy= stateEnergy;
+
     return true;
 }
 

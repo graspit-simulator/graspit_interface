@@ -42,6 +42,7 @@
 #include <graspit_interface/SaveImage.h>
 #include <graspit_interface/ToggleAllCollisions.h>
 #include <graspit_interface/ComputeQuality.h>
+#include <graspit_interface/ComputeEnergy.h>
 #include <graspit_interface/ApproachToContact.h>
 #include <graspit_interface/FindInitialContact.h>
 #include <graspit_interface/DynamicAutoGraspComplete.h>
@@ -94,6 +95,7 @@ private:
   ros::ServiceServer toggleAllCollisions_srv;
 
   ros::ServiceServer computeQuality_srv;
+  ros::ServiceServer computeEnergy_srv;
 
   ros::ServiceServer approachToContact_srv;
   ros::ServiceServer findInitialContact_srv;
@@ -186,6 +188,9 @@ private:
 
   bool computeQualityCB(graspit_interface::ComputeQuality::Request &request,
                          graspit_interface::ComputeQuality::Response &response);
+
+  bool computeEnergyCB(graspit_interface::ComputeEnergy::Request &request,
+                         graspit_interface::ComputeEnergy::Response &response);
 
   bool approachToContactCB(graspit_interface::ApproachToContact::Request &request,
                            graspit_interface::ApproachToContact::Response &response);
