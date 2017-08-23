@@ -10,13 +10,13 @@ find_package(catkin REQUIRED COMPONENTS
     geometry_msgs
     sensor_msgs
     roscpp
-    graspit
     actionlib
     actionlib_msgs)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(Qt4 COMPONENTS QtCore  REQUIRED)
+find_package(graspit)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -61,6 +61,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    SearchSpace.msg
    SearchContact.msg
    Energy.msg
+   Contact.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -92,6 +93,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    SaveImage.srv
    ToggleAllCollisions.srv
    ComputeQuality.srv
+   ComputeEnergy.srv
    ApproachToContact.srv
    FindInitialContact.srv
    DynamicAutoGraspComplete.srv
@@ -161,6 +163,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ## Your package locations should be listed before other locations
 include_directories(include
                     ${catkin_INCLUDE_DIRS}
+                    ${GRASPIT_INCLUDE_DIRS}
                     ${QT_INCLUDES})
 
 ADD_DEFINITIONS(${QT_DEFINITIONS})
@@ -190,6 +193,7 @@ add_library(graspit_interface
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(graspit_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${QT_DEFINITIONS})
+add_dependencies(graspit_interface ${PROJECT_NAME}_gencpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(graspit_interface

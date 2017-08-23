@@ -1,0 +1,14 @@
+uint32 handId
+uint32 graspableBodyId
+string energyType
+
+---
+uint8 RESULT_SUCCESS    = 0
+uint8 RESULT_INVALID_HAND_ID = 1
+uint8 RESULT_INVALID_BODY_ID  = 2
+uint8 RESULT_INVALID_ENERGY_TYPE = 3
+
+uint8 result
+
+float64 energy
+bool isLegal

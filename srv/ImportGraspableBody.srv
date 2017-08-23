@@ -1,4 +1,5 @@
 string filename
+geometry_msgs/Pose pose
 ---
 uint8 RESULT_SUCCESS    = 0
 uint8 RESULT_FAILURE    = 1

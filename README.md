@@ -1,18 +1,35 @@
+[![Build Status](https://travis-ci.org/graspit-simulator/graspit_interface.svg?branch=master)](https://travis-ci.org/graspit-simulator/graspit_interface)
+
 graspit_interface
 =================
 
-This plugin exposes a ROS interface for the GraspIt! simulator. Our main purpose for writing
-this plugin was to give GraspIt! more exposure to the ROS community and make it easier to
-get started planning grasps with GraspIt! You can interact with this interface through a
-variety of ROS services and action servers.
+This plugin exposes a ROS interface for the GraspIt! simulator. The main purpose for writing this plugin was to demonstrate what we believe is the easiest way to expose GraspIt!
+functionality as a variety ROS services and action servers. 
 
-If you have any specific features you'd like to see, let us know by submitting a new issue, or feel free to submit a pull request!
+Please feel free to use this as a template to write your own bridge between a ros system and GraspIt!.
 
 To see how a client interacts with this interface, check out our python client
-[graspit_commander](https://github.com/CURG/graspit_commander).
+[graspit_commander](https://github.com/graspit-simulator/graspit_commander).
 
 
-Setup:
+GraspIt Setup:
+------
+```
+git clone https://github.com/graspit-simulator/graspit.git
+cd graspit
+mkdir build
+cd build
+cmake ..
+make -j5
+sudo make install
+```
+
+You might need to add /usr/local/lib to the loaded library path as in:
+```
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+```
+
+ROS Setup:
 ------
 ```
 //create ros workspace
@@ -23,9 +40,8 @@ source /opt/ros/indigo/setup.bash
 catkin_init_workspace . 
 
 //clone packages
-git clone https://github.com/graspit-simulator/graspit-ros.git --recursive
-git clone https://github.com/CURG/graspit_interface.git
-git clone https://github.com/CURG/graspit_commander.git
+git clone https://github.com/graspit-simulator/graspit_interface.git
+git clone https://github.com/graspit-simulator/graspit_commander.git
 
 //build workspace
 cd graspit_ros_ws

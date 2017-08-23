@@ -1,22 +1,23 @@
 #include "graspit_interface.h"
 
-#include "graspit_source/include/graspitCore.h"
-#include "graspit_source/include/robot.h"
-#include "graspit_source/include/world.h"
-#include "graspit_source/include/ivmgr.h"
-
-#include "graspit_source/include/quality.h"
-#include "graspit_source/include/grasp.h"
-#include "graspit_source/include/EGPlanner/searchState.h"
-#include "graspit_source/include/EGPlanner/egPlanner.h"
-#include "graspit_source/include/EGPlanner/simAnnPlanner.h"
-#include "graspit_source/include/EGPlanner/guidedPlanner.h"
-#include "graspit_source/include/bodySensor.h"
-
-#include "graspit_interface/TactileSensorData.h"
-#include "cmdline/cmdline.h"
-
 #include <string>
+#include <graspit/graspitCore.h>
+#include <graspit/robot.h>
+#include <graspit/world.h>
+#include <graspit/ivmgr.h>
+
+#include <graspit/quality/quality.h>
+#include <graspit/quality/qualVolume.h>
+#include <graspit/quality/qualEpsilon.h>
+#include <graspit/grasp.h>
+#include <graspit/EGPlanner/searchState.h>
+#include <graspit/EGPlanner/egPlanner.h>
+#include <graspit/EGPlanner/simAnnPlanner.h>
+#include <graspit/EGPlanner/guidedPlanner.h>
+#include <graspit/EGPlanner/energy/searchEnergyFactory.h>
+#include<graspit/EGPlanner/energy/searchEnergy.h>
+
+#include <graspit/cmdline/cmdline.h>
 
 namespace GraspitInterface
 {
@@ -75,6 +76,7 @@ int GraspitInterface::init(int argc, char** argv)
     toggleAllCollisions_srv = nh->advertiseService("toggleAllCollisions", &GraspitInterface::toggleAllCollisionsCB, this);
 
     computeQuality_srv = nh->advertiseService("computeQuality", &GraspitInterface::computeQualityCB, this);
+    computeEnergy_srv = nh->advertiseService("computeEnergy", &GraspitInterface::computeEnergyCB, this);
 
     approachToContact_srv = nh->advertiseService("approachToContact", &GraspitInterface::approachToContactCB, this);
     findInitialContact_srv = nh->advertiseService("findInitialContact", &GraspitInterface::findInitialContactCB, this);
@@ -107,7 +109,12 @@ int GraspitInterface::mainLoop()
         ROS_INFO("Planner Signal/Slots connected");
     }
 
-    ros::spinOnce();
+    if (ros::ok()){
+      ros::spinOnce();
+    }
+    else{
+        graspitCore->exitMainLoop();
+    }
     return 0;
 } 
 
@@ -129,9 +136,30 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
         pose.orientation.w = t.rotation().w();
         pose.orientation.x = t.rotation().x();
         pose.orientation.y = t.rotation().y();
-        pose.orientation.z = t.rotation().z();
+	pose.orientation.z = t.rotation().z();
 
-        response.robot.pose = pose;
+	response.robot.pose = pose;
+	
+	// Info for all contacts with this robot:
+	std::list<Contact*> contacts = r->getContacts();
+	for (std::list<Contact*>::iterator it = contacts.begin();
+	     it != contacts.end(); it++) {
+	  graspit_interface::Contact c;
+	  c.body1 = (*it)->getBody1()->getName().toStdString();
+	  c.body2 = (*it)->getBody2()->getName().toStdString();
+            
+          transf contactInWorldFrame = (*it)->getBody1Tran() % (*it)->getFrame();
+          c.ps.header.frame_id = "world";
+          c.ps.pose.position.x = contactInWorldFrame.translation().x() / 1000.0;
+          c.ps.pose.position.y = contactInWorldFrame.translation().y() / 1000.0;;
+          c.ps.pose.position.z = contactInWorldFrame.translation().z() / 1000.0;;
+          c.ps.pose.orientation.w = contactInWorldFrame.rotation().w();
+          c.ps.pose.orientation.x = contactInWorldFrame.rotation().x();
+          c.ps.pose.orientation.y = contactInWorldFrame.rotation().y();
+          c.ps.pose.orientation.z = contactInWorldFrame.rotation().z();
+	  c.cof = (*it)->getCof();
+	  response.robot.contacts.push_back(c);
+        }
 
         double *jointVals = new double[r->getNumJoints()];
         r->getJointValues(jointVals);
@@ -452,6 +480,17 @@ bool GraspitInterface::importRobotCB(graspit_interface::ImportRobot::Request &re
         response.result = response.RESULT_FAILURE;
         return true;
     }
+    vec3 newTranslation(request.pose.position.x * 1000.0,
+                        request.pose.position.y * 1000.0,
+                        request.pose.position.z * 1000.0);
+
+    Quaternion newRotation(request.pose.orientation.w,
+                           request.pose.orientation.x,
+                           request.pose.orientation.y,
+                           request.pose.orientation.z);
+
+    transf newTransform(newRotation, newTranslation);
+    r->setTran(newTransform);
     return true;
 }
 
@@ -470,6 +509,18 @@ bool GraspitInterface::importObstacleCB(graspit_interface::ImportObstacle::Reque
         response.result = response.RESULT_FAILURE;
         return true;
     }
+
+    vec3 newTranslation(request.pose.position.x * 1000.0,
+                        request.pose.position.y * 1000.0,
+                        request.pose.position.z * 1000.0);
+
+    Quaternion newRotation(request.pose.orientation.w,
+                           request.pose.orientation.x,
+                           request.pose.orientation.y,
+                           request.pose.orientation.z);
+
+    transf newTransform(newRotation, newTranslation);
+    b->setTran(newTransform);
     return true;
 }
 
@@ -486,12 +537,25 @@ bool GraspitInterface::importGraspableBodyCB(graspit_interface::ImportGraspableB
     Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),filename);
     if(b == NULL){
         //Now try to load using unaltered filepath from request.
-        Body * b = graspitCore->getWorld()->importBody(QString("GraspableBody"),QString(request.filename.data()));
+        b = graspitCore->getWorld()->importBody(QString("GraspableBody"),QString(request.filename.data()));
         if(b == NULL){
             response.result = response.RESULT_FAILURE;
             return true;
         }
     }
+
+    vec3 newTranslation(request.pose.position.x * 1000.0,
+                        request.pose.position.y * 1000.0,
+                        request.pose.position.z * 1000.0);
+
+    Quaternion newRotation(request.pose.orientation.w,
+                           request.pose.orientation.x,
+                           request.pose.orientation.y,
+                           request.pose.orientation.z);
+
+    transf newTransform(newRotation, newTranslation);
+    b->setTran(newTransform);
+
     return true;
 }
 
@@ -570,7 +634,6 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
                                          graspit_interface::ComputeQuality::Response &response)
 {
     CollisionReport colReport;
-
     // first test whether the hand is in collision now
     int numCols = graspitCore->getWorld()->getCollisionReport(&colReport);
     // if it is in collision, then there should be no reason to calculate the quality
@@ -580,7 +643,6 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
         response.volume = -1.0;
         return true;
     }
-
     Hand *mHand =graspitCore->getWorld()->getHand(request.id);
     if (mHand==NULL)
     {
@@ -598,6 +660,47 @@ bool GraspitInterface::computeQualityCB(graspit_interface::ComputeQuality::Reque
 
     response.epsilon = mEpsQual.evaluate();
     response.volume = mVolQual.evaluate();
+
+    return true;
+}
+
+bool GraspitInterface::computeEnergyCB(graspit_interface::ComputeEnergy::Request &request,
+                                         graspit_interface::ComputeEnergy::Response &response)
+{
+    Hand *mHand =graspitCore->getWorld()->getHand(request.handId);
+    if (mHand==NULL)
+    {
+        response.result = response.RESULT_INVALID_HAND_ID;
+        ROS_INFO("Planning Hand is NULL");
+        return true;
+    }
+    GraspableBody *mObject = graspitCore->getWorld()->getGB(request.graspableBodyId);
+    if(mObject == NULL)
+    {
+        ROS_INFO("Planning Object is NULL");
+        response.result = response.RESULT_INVALID_BODY_ID;
+        return true;
+    }
+
+    graspitCore->getWorld()->findAllContacts();
+    graspitCore->getWorld()->updateGrasps();
+
+    std::vector<std::string> energyTypes = SearchEnergyFactory::getInstance()->getAllRegisteredEnergy();
+    if(std::find(energyTypes.begin(),energyTypes.end(), request.energyType) == energyTypes.end())
+      {
+        ROS_INFO_STREAM("Invalid Energy Type " << request.energyType << std::endl);
+        response.result = response.RESULT_INVALID_ENERGY_TYPE;
+        return true;
+      }
+
+    SearchEnergy *se = SearchEnergyFactory::getInstance()->createEnergy(request.energyType);
+
+    bool isLegal;
+    double stateEnergy;
+    se->analyzeCurrentPosture(mHand, mObject, isLegal, stateEnergy);
+    response.isLegal = isLegal;
+    response.energy= stateEnergy;
+
     return true;
 }
 
@@ -819,6 +922,14 @@ void GraspitInterface::runPlannerInMainThread()
         pose.orientation.y = t.rotation().y();
         pose.orientation.z = t.rotation().z();
 
+        geometry_msgs::Vector3Stamped approach_direction;
+        vec3 approachInHand = mHand->getApproachTran() *  vec3 (0, 0, 1);
+        approachInHand.normalize();
+        approach_direction.vector.x = approachInHand.x();
+        approach_direction.vector.y = approachInHand.y();
+        approach_direction.vector.z = approachInHand.z();
+        approach_direction.header.frame_id = mHand->getName().toStdString();
+
         graspit_interface::Grasp g;
         g.graspable_body_id = goal.graspable_body_id;
 
@@ -839,6 +950,7 @@ void GraspitInterface::runPlannerInMainThread()
 
         g.epsilon_quality= mEpsQual.evaluate();
         g.volume_quality = mVolQual.evaluate();
+        g.approach_direction = approach_direction;
 
         ROS_INFO("Pushing back grasp");
         result_.grasps.push_back(g);

@@ -11,6 +11,9 @@ float64 epsilon_quality
 float64 volume_quality
 
 
+# The approach direction to take before picking an object
+geometry_msgs/Vector3Stamped approach_direction
+
 
 
 

@@ -8,9 +8,9 @@
 #endif
 
 //GraspIt! includes
-#include <graspit_source/include/plugin.h>
-#include "graspit_source/include/EGPlanner/searchState.h"
-#include "graspit_source/include/EGPlanner/simAnnPlanner.h"
+#include <graspit/plugin.h>
+#include <graspit/EGPlanner/searchState.h>
+#include <graspit/EGPlanner/simAnnPlanner.h>
 
 //Message includes
 #include <graspit_interface/SearchSpace.h>
@@ -42,6 +42,7 @@
 #include <graspit_interface/SaveImage.h>
 #include <graspit_interface/ToggleAllCollisions.h>
 #include <graspit_interface/ComputeQuality.h>
+#include <graspit_interface/ComputeEnergy.h>
 #include <graspit_interface/ApproachToContact.h>
 #include <graspit_interface/FindInitialContact.h>
 #include <graspit_interface/DynamicAutoGraspComplete.h>
@@ -94,6 +95,7 @@ private:
   ros::ServiceServer toggleAllCollisions_srv;
 
   ros::ServiceServer computeQuality_srv;
+  ros::ServiceServer computeEnergy_srv;
 
   ros::ServiceServer approachToContact_srv;
   ros::ServiceServer findInitialContact_srv;
@@ -187,6 +189,9 @@ private:
   bool computeQualityCB(graspit_interface::ComputeQuality::Request &request,
                          graspit_interface::ComputeQuality::Response &response);
 
+  bool computeEnergyCB(graspit_interface::ComputeEnergy::Request &request,
+                         graspit_interface::ComputeEnergy::Response &response);
+
   bool approachToContactCB(graspit_interface::ApproachToContact::Request &request,
                            graspit_interface::ApproachToContact::Response &response);
 
@@ -198,6 +203,28 @@ private:
 
   //ActionServer callbacks
   void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
+
+
+  // Convenience functions for converting between pose types:
+    inline geometry_msgs::Pose transfToRosMsg(transf pose) {
+        geometry_msgs::Pose ret;
+        ret.position.x = pose.translation().x() / 1000.0;
+        ret.position.y = pose.translation().y() / 1000.0;;
+        ret.position.z = pose.translation().z() / 1000.0;;
+        ret.orientation.w = pose.rotation().w();
+        ret.orientation.x = pose.rotation().x();
+        ret.orientation.y = pose.rotation().y();
+        ret.orientation.z = pose.rotation().z();
+        return ret;
+    }
+    inline transf rosMsgToTransf(geometry_msgs::Pose pose) {
+        Quaternion q(pose.orientation.w, pose.orientation.x, 
+                pose.orientation.y, pose.orientation.z);
+        vec3 p(pose.position.x * 1000.0, pose.position.y * 1000.0, 
+                pose.position.z * 1000.0);
+        transf ret(q, p);
+        return ret;
+}
 
 public: 
   GraspitInterface(){}
