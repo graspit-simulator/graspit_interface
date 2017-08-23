@@ -11,9 +11,12 @@
 #include "graspit_source/include/EGPlanner/egPlanner.h"
 #include "graspit_source/include/EGPlanner/simAnnPlanner.h"
 #include "graspit_source/include/EGPlanner/guidedPlanner.h"
+#include "graspit_source/include/bodySensor.h"
 
+#include "graspit_interface/TactileSensorData.h"
 #include "cmdline/cmdline.h"
 
+#include <string>
 
 namespace GraspitInterface
 {
@@ -130,14 +133,68 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
 
         response.robot.pose = pose;
 
+        double *jointVals = new double[r->getNumJoints()];
+        r->getJointValues(jointVals);
+
+        sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
         for (int i=0; i < r->getNumJoints(); i++) {
-            sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
-            response.robot.joints.push_back(robot_joint_state);
+
+            std::string joint_name;
+            std::ostringstream convert;
+            convert << i;
+            joint_name =convert.str();
+
+            robot_joint_state.name.push_back(joint_name);
+            robot_joint_state.position.push_back(jointVals[i]);
+            robot_joint_state.velocity.push_back(0);
+            robot_joint_state.effort.push_back(0);
+
         }
+        response.robot.joints.push_back(robot_joint_state);
 
         for (int i=0; i< r->getNumDOF(); i++) {
             response.robot.dofs.push_back(r->getDOF(i)->getVal());
         }
+
+//        std::vector<SensorReading*> sensorReadings;
+//        for(int c = 0; c < r->getNumChains(); c++)
+//        {
+//            for(int l = 0; l < r->getChain(c)->getNumLinks(); l++)
+//            {
+//                r->getChain(c)->getLink(l)->getSensorReadings(sensorReadings);
+//            }
+//        }
+
+//        for (int i=0; i < sensorReadings.size();i++)
+//        {
+//            SensorReading *s;
+//            s->pos
+//            response.robot.tactile.sensor_forces.push_back(sensorReadings.at(i)->sensorReading[2]);
+//            response.robot.tactile.sensor_poses.push_back(sensorReadings.at(i));
+//        }
+
+        std::cout << "About to add Sensors!!!, Num sensors: " << r->getNumSensors() << std::endl;
+        for (int i=0; i< r->getNumSensors(); i++) {
+
+            BodySensor *s = r->getSensor(i);
+            transf t = s->getSensorTran();
+
+            geometry_msgs::PoseStamped poseStamped = geometry_msgs::PoseStamped();
+
+            poseStamped.header.frame_id = "world";
+            poseStamped.pose.position.x = t.translation().x() / 1000.0;
+            poseStamped.pose.position.y = t.translation().y() / 1000.0;;
+            poseStamped.pose.position.z = t.translation().z() / 1000.0;;
+            poseStamped.pose.orientation.w = t.rotation().w();
+            poseStamped.pose.orientation.x = t.rotation().x();
+            poseStamped.pose.orientation.y = t.rotation().y();
+            poseStamped.pose.orientation.z = t.rotation().z();
+
+            response.robot.tactile.sensor_poses.push_back(poseStamped);
+            response.robot.tactile.sensor_forces.push_back(s->getNormalForce());
+            std::cout << "Adding Sensor with force: " << s->getNormalForce() << std::endl;
+        }
+
 
         return true;
     }

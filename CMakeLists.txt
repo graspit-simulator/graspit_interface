@@ -55,6 +55,7 @@ find_package(Qt4 COMPONENTS QtCore  REQUIRED)
    Body.msg
    GraspableBody.msg
    Robot.msg
+   TactileSensorData.msg
    Grasp.msg
    Planner.msg
    SearchSpace.msg
