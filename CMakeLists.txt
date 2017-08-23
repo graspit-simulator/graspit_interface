@@ -60,6 +60,7 @@ find_package(graspit)
    SearchSpace.msg
    SearchContact.msg
    Energy.msg
+   Contact.msg
  )
 
 ## Generate services in the 'srv' folder
