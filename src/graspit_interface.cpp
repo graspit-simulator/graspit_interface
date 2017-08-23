@@ -156,24 +156,6 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
             response.robot.dofs.push_back(r->getDOF(i)->getVal());
         }
 
-//        std::vector<SensorReading*> sensorReadings;
-//        for(int c = 0; c < r->getNumChains(); c++)
-//        {
-//            for(int l = 0; l < r->getChain(c)->getNumLinks(); l++)
-//            {
-//                r->getChain(c)->getLink(l)->getSensorReadings(sensorReadings);
-//            }
-//        }
-
-//        for (int i=0; i < sensorReadings.size();i++)
-//        {
-//            SensorReading *s;
-//            s->pos
-//            response.robot.tactile.sensor_forces.push_back(sensorReadings.at(i)->sensorReading[2]);
-//            response.robot.tactile.sensor_poses.push_back(sensorReadings.at(i));
-//        }
-
-        std::cout << "About to add Sensors!!!, Num sensors: " << r->getNumSensors() << std::endl;
         for (int i=0; i< r->getNumSensors(); i++) {
 
             BodySensor *s = r->getSensor(i);
@@ -192,7 +174,6 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
 
             response.robot.tactile.sensor_poses.push_back(poseStamped);
             response.robot.tactile.sensor_forces.push_back(s->getNormalForce());
-            std::cout << "Adding Sensor with force: " << s->getNormalForce() << std::endl;
         }
 
 
