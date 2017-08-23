@@ -147,10 +147,15 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
 	  c.body1 = (*it)->getBody1()->getName().toStdString();
 	  c.body2 = (*it)->getBody2()->getName().toStdString();
             
-	  position p = (*it)->getPosition();
-	  c.position.x = p.x() * 0.001; 
-	  c.position.y = p.y() * 0.001; 
-	  c.position.z = p.z() * 0.001; 
+          transf contactInWorldFrame = (*it)->getBody1Tran() % (*it)->getFrame();
+          c.ps.header.frame_id = "world";
+          c.ps.pose.position.x = contactInWorldFrame.translation().x() / 1000.0;
+          c.ps.pose.position.y = contactInWorldFrame.translation().y() / 1000.0;;
+          c.ps.pose.position.z = contactInWorldFrame.translation().z() / 1000.0;;
+          c.ps.pose.orientation.w = contactInWorldFrame.rotation().w();
+          c.ps.pose.orientation.x = contactInWorldFrame.rotation().x();
+          c.ps.pose.orientation.y = contactInWorldFrame.rotation().y();
+          c.ps.pose.orientation.z = contactInWorldFrame.rotation().z();
 	  c.cof = (*it)->getCof();
 	  response.robot.contacts.push_back(c);
         }
