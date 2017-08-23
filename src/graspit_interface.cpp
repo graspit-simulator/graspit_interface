@@ -395,6 +395,7 @@ bool GraspitInterface::autoGraspCB(graspit_interface::AutoGrasp::Request &reques
     }
     else{
         graspitCore->getWorld()->getHand(request.id)->autoGrasp(true, 1.0, false);
+        graspitCore->getWorld()->updateGrasps();
     }
     return true;
 }
@@ -408,6 +409,7 @@ bool GraspitInterface::autoOpenCB(graspit_interface::AutoOpen::Request &request,
     }
     else{
         graspitCore->getWorld()->getHand(request.id)->autoGrasp(true, -1.0, false);
+        graspitCore->getWorld()->updateGrasps();
     }
     return true;
 }
@@ -599,6 +601,7 @@ bool GraspitInterface::clearWorldCB(graspit_interface::ClearWorld::Request &requ
 {
     ROS_INFO("Emptying World");
     graspitCore->emptyWorld();
+
     return true;
 }
 
