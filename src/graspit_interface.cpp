@@ -135,9 +135,25 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
         pose.orientation.w = t.rotation().w();
         pose.orientation.x = t.rotation().x();
         pose.orientation.y = t.rotation().y();
-        pose.orientation.z = t.rotation().z();
+	pose.orientation.z = t.rotation().z();
 
-        response.robot.pose = pose;
+	response.robot.pose = pose;
+	
+	// Info for all contacts with this robot:
+	std::list<Contact*> contacts = r->getContacts();
+	for (std::list<Contact*>::iterator it = contacts.begin();
+	     it != contacts.end(); it++) {
+	  graspit_interface::Contact c;
+	  c.body1 = (*it)->getBody1()->getName().toStdString();
+	  c.body2 = (*it)->getBody2()->getName().toStdString();
+            
+	  position p = (*it)->getPosition();
+	  c.position.x = p.x() * 0.001; 
+	  c.position.y = p.y() * 0.001; 
+	  c.position.z = p.z() * 0.001; 
+	  c.cof = (*it)->getCof();
+	  response.robot.contacts.push_back(c);
+        }
 
         for (int i=0; i < r->getNumJoints(); i++) {
             sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
