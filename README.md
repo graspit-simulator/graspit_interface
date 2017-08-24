@@ -28,6 +28,11 @@ You might need to add /usr/local/lib to the loaded library path as in:
 ```
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ```
+You will also want to set the GRASPIT environment variable:
+```
+export GRASPIT=~/.graspit
+```
+On Linux, you can add both of these lines to the bottom of your ~/.bashrc
 
 ROS Setup:
 ------
