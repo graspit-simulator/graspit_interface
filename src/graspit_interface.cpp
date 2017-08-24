@@ -15,8 +15,8 @@
 #include <graspit/EGPlanner/simAnnPlanner.h>
 #include <graspit/EGPlanner/guidedPlanner.h>
 #include <graspit/EGPlanner/energy/searchEnergyFactory.h>
-#include<graspit/EGPlanner/energy/searchEnergy.h>
-
+#include <graspit/EGPlanner/energy/searchEnergy.h>
+#include <graspit/bodySensor.h>
 #include <graspit/cmdline/cmdline.h>
 
 namespace GraspitInterface
