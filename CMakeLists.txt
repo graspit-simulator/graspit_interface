@@ -55,6 +55,7 @@ find_package(graspit)
    Body.msg
    GraspableBody.msg
    Robot.msg
+   TactileSensorData.msg
    Grasp.msg
    Planner.msg
    SearchSpace.msg

@@ -1,5 +1,6 @@
 #include "graspit_interface.h"
 
+#include <string>
 #include <graspit/graspitCore.h>
 #include <graspit/robot.h>
 #include <graspit/world.h>
@@ -14,8 +15,8 @@
 #include <graspit/EGPlanner/simAnnPlanner.h>
 #include <graspit/EGPlanner/guidedPlanner.h>
 #include <graspit/EGPlanner/energy/searchEnergyFactory.h>
-#include<graspit/EGPlanner/energy/searchEnergy.h>
-
+#include <graspit/EGPlanner/energy/searchEnergy.h>
+#include <graspit/bodySensor.h>
 #include <graspit/cmdline/cmdline.h>
 
 namespace GraspitInterface
@@ -160,14 +161,49 @@ bool GraspitInterface::getRobotCB(graspit_interface::GetRobot::Request &request,
 	  response.robot.contacts.push_back(c);
         }
 
+        double *jointVals = new double[r->getNumJoints()];
+        r->getJointValues(jointVals);
+
+        sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
         for (int i=0; i < r->getNumJoints(); i++) {
-            sensor_msgs::JointState robot_joint_state = sensor_msgs::JointState();
-            response.robot.joints.push_back(robot_joint_state);
+
+            std::string joint_name;
+            std::ostringstream convert;
+            convert << i;
+            joint_name =convert.str();
+
+            robot_joint_state.name.push_back(joint_name);
+            robot_joint_state.position.push_back(jointVals[i]);
+            robot_joint_state.velocity.push_back(0);
+            robot_joint_state.effort.push_back(0);
+
         }
+        response.robot.joints.push_back(robot_joint_state);
 
         for (int i=0; i< r->getNumDOF(); i++) {
             response.robot.dofs.push_back(r->getDOF(i)->getVal());
         }
+
+        for (int i=0; i< r->getNumSensors(); i++) {
+
+            BodySensor *s = r->getSensor(i);
+            transf t = s->getSensorTran();
+
+            geometry_msgs::PoseStamped poseStamped = geometry_msgs::PoseStamped();
+
+            poseStamped.header.frame_id = "world";
+            poseStamped.pose.position.x = t.translation().x() / 1000.0;
+            poseStamped.pose.position.y = t.translation().y() / 1000.0;;
+            poseStamped.pose.position.z = t.translation().z() / 1000.0;;
+            poseStamped.pose.orientation.w = t.rotation().w();
+            poseStamped.pose.orientation.x = t.rotation().x();
+            poseStamped.pose.orientation.y = t.rotation().y();
+            poseStamped.pose.orientation.z = t.rotation().z();
+
+            response.robot.tactile.sensor_poses.push_back(poseStamped);
+            response.robot.tactile.sensor_forces.push_back(s->getNormalForce());
+        }
+
 
         return true;
     }
@@ -359,6 +395,7 @@ bool GraspitInterface::autoGraspCB(graspit_interface::AutoGrasp::Request &reques
     }
     else{
         graspitCore->getWorld()->getHand(request.id)->autoGrasp(true, 1.0, false);
+        graspitCore->getWorld()->updateGrasps();
     }
     return true;
 }
@@ -372,6 +409,7 @@ bool GraspitInterface::autoOpenCB(graspit_interface::AutoOpen::Request &request,
     }
     else{
         graspitCore->getWorld()->getHand(request.id)->autoGrasp(true, -1.0, false);
+        graspitCore->getWorld()->updateGrasps();
     }
     return true;
 }
@@ -563,6 +601,7 @@ bool GraspitInterface::clearWorldCB(graspit_interface::ClearWorld::Request &requ
 {
     ROS_INFO("Emptying World");
     graspitCore->emptyWorld();
+
     return true;
 }
 
