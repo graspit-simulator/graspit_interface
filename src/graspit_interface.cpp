@@ -508,8 +508,12 @@ bool GraspitInterface::importObstacleCB(graspit_interface::ImportObstacle::Reque
 
     Body * b = graspitCore->getWorld()->importBody(QString("Body"),filename);
     if(b == NULL){
-        response.result = response.RESULT_FAILURE;
-        return true;
+        //Now try to load using unaltered filepath from request.
+        b = graspitCore->getWorld()->importBody(QString("Body"),QString(request.filename.data()));
+        if(b == NULL){
+            response.result = response.RESULT_FAILURE;
+            return true;
+        }
     }
 
     vec3 newTranslation(request.pose.position.x * 1000.0,
