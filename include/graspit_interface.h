@@ -204,7 +204,7 @@ private:
   //ActionServer callbacks
   void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
 
-  void processGraspsHelper(const GraspPlanningState *gps, graspit_interface::Grasp &g, Hand *mHand);
+  void graspPlanningStateToROSMsg(const GraspPlanningState *gps, graspit_interface::Grasp &g, Hand *mHand);
 
 
   // Convenience functions for converting between pose types:

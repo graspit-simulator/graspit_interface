@@ -800,7 +800,7 @@ void GraspitInterface::buildFeedbackInMainThread()
     {
         const GraspPlanningState *gps  = mPlanner->getGrasp(i);
         graspit_interface::Grasp g;
-        processGraspsHelper(gps, g, mHand);
+        graspPlanningStateToROSMsg(gps, g, mHand);
 
         feedback_.grasps.push_back(g);
         feedback_.energies.push_back(gps->getEnergy());
@@ -926,7 +926,7 @@ void GraspitInterface::runPlannerInMainThread()
 
  }
 
-void GraspitInterface::processGraspsHelper(const GraspPlanningState* gps, graspit_interface::Grasp &g, Hand *mHand){
+void GraspitInterface::graspPlanningStateToROSMsg(const GraspPlanningState* gps, graspit_interface::Grasp &g, Hand *mHand){
     gps->execute(mHand);
     mHand->autoGrasp(false,1.0,false);
 
@@ -992,7 +992,7 @@ void GraspitInterface::processGraspsHelper(const GraspPlanningState* gps, graspi
     {
         const GraspPlanningState *gps  = mPlanner->getGrasp(i);
         graspit_interface::Grasp g;
-        processGraspsHelper(gps, g, mHand);
+        graspPlanningStateToROSMsg(gps, g, mHand);
 
         result_.grasps.push_back(g);
         result_.energies.push_back(gps->getEnergy());
