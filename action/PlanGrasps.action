@@ -7,6 +7,7 @@ SearchSpace search_space
 SearchContact search_contact
 
 int32 max_steps
+int32 feedback_num_steps
 ---
 # Result
 Grasp[] grasps
@@ -15,4 +16,6 @@ string search_energy
 ---
 # Feedback 
 int32 current_step
-int32 current_num_grasps
+Grasp[] grasps
+float64[] energies
+string search_energy
