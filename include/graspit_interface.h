@@ -204,6 +204,8 @@ private:
   //ActionServer callbacks
   void PlanGraspsCB(const graspit_interface::PlanGraspsGoalConstPtr &goal);
 
+  void graspPlanningStateToROSMsg(const GraspPlanningState *gps, graspit_interface::Grasp &g, Hand *mHand);
+
 
   // Convenience functions for converting between pose types:
     inline geometry_msgs::Pose transfToRosMsg(transf pose) {
@@ -238,11 +240,13 @@ public Q_SLOTS:
 
     void runPlannerInMainThread();
     void processPlannerResultsInMainThread();
+    void buildFeedbackInMainThread();
 
 Q_SIGNALS:
 
     void emitRunPlannerInMainThread();
     void emitProcessPlannerResultsInMainThread();
+    void emitBuildFeedbackInMainThread();
 
 
 };
