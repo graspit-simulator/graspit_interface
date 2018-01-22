@@ -36,6 +36,9 @@ On Linux, you can add both of these lines to the bottom of your ~/.bashrc
 
 ROS Setup:
 ------
+
+After running the GraspIt! Setup as explained above, the following details how to setup graspIt! to work with ROS.
+
 ```
 //create ros workspace
 mkdir -p graspit_ros_ws/src
