@@ -5,6 +5,7 @@ Planner planner
 string search_energy
 SearchSpace search_space
 SearchContact search_contact
+SimAnnParams sim_ann_params
 
 int32 max_steps
 int32 feedback_num_steps
